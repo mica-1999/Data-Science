@@ -101,19 +101,19 @@ except Exception as e:
     print("An error occurred:", str(e))
 
 #%% 3- load a dataset in CSV, manipulate the data, and save the resulting dataframe in CSV
-import pandas as pd
+import pandas as pd  # Library for working with tabular data (CSV, Excel, SQL, etc.)
 
 def load_and_manipulate_data(file_path):
     # Load the dataset
     try:
         # Load the dataframe
-
+        df = pd.read_csv(file_path)  # Lê o ficheiro csv e transforma numa tabela
 
         # Manipulate the data to sort by column: BloodPressure
-
+        df_sorted = df.sort_values(by='BloodPressure')  # Ordena o DataFrame pela coluna BloodPressure
 
         # Save the manipulated data to a new CSV file
-
+        df_sorted.to_csv("diabetes_sorted.csv", index=False)  # Guarda o DataFrame ordenado como CSV, sem o índice
 
     except FileNotFoundError:
         print(f"Error: File not found.")
@@ -124,12 +124,11 @@ def load_and_manipulate_data(file_path):
 load_and_manipulate_data(input("Enter the path to the CSV file: ")) # Since the file is in the same folder as the script just type: diabetes.csv
 
 #%% 4- create, insert and print tables using SQL
-
-import sqlite3
+import sqlite3  # Library to interact with SQLite databases in Python
 
 # Function to create tables
 def create_tables(conn):
-    cursor = conn.cursor()
+    cursor = conn.cursor()  # Create a cursor to execute SQL commands
 
     # Create the "students" table
     cursor.execute('''
@@ -151,17 +150,20 @@ def create_tables(conn):
         )
     ''')
 
-    conn.commit()
+    conn.commit()  # Save changes to the database
 
 # Function to insert data into tables
 def insert_data(conn):
     cursor = conn.cursor()
 
     # Insert data into the "students" table
+    cursor.execute("INSERT INTO students (name, age) VALUES (?, ?)", ("John Doe", 20))
+    cursor.execute("INSERT INTO students (name, age) VALUES (?, ?)", ("Jane Smith", 22))
 
 
     # Insert data into the "grades" table
-
+    cursor.execute("INSERT INTO grades (subject, grade, student_id) VALUES (?, ?, ?)", ("Math", 90, 1))
+    cursor.execute("INSERT INTO grades (subject, grade, student_id) VALUES (?, ?, ?)", ("English", 85, 2))
 
     # Commit the data insertion
     conn.commit()
@@ -176,7 +178,9 @@ def print_tables(conn):
     print(cursor.fetchall())
 
     # Print the "grades" table
-
+    cursor.execute("SELECT * FROM grades")  # Select all rows from grades
+    print("\nGrades Table:")
+    print(cursor.fetchall())  # Fetch all rows and print them
 
 # Connect to the SQLite database (or create a new one if not exists)
 db_file_path = "school_database.db"
@@ -195,23 +199,27 @@ print_tables(conn)
 conn.close()
 
 #%% 5- serialize and deserialize a randomly created array
-
 import numpy as np
-import pickle
+import pickle # Library for serializing (saving) and deserializing (loading) Python objects
 
 # Function to create a random NumPy array
 def create_random_array(shape):
-
+    array = np.random.rand(*shape)  # Creates an array of the given shape with random floats between 0 and 1
+    return array
 
 # Function to serialize and deserialize the NumPy array using pickle
 def serialize_and_deserialize(array):
     # Serialize the array
     with open('serialized_array.pkl', 'wb') as file:
-
+        pickle.dump(array, file)  # Converts the array into a byte stream and saves it
 
     # Deserialize the array and print it
     with open('serialized_array.pkl', 'rb') as file:
+        loaded_array = pickle.load(file)  # Reads the byte stream and reconstructs the array
 
+    # Print the deserialized array
+    print("Deserialized Array:")
+    print(loaded_array)
 
 # Create a random NumPy array
 random_array = create_random_array((3, 3))
