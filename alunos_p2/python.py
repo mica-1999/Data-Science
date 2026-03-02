@@ -109,6 +109,7 @@ for feature in features:
     plt.show()
 
 #%% 3-Data Pre-processing
+# TL;DR: Clean and prepare the dataset (handle missing values, outliers, and fill in data) before analysis or modeling
 import pandas as pd
 import numpy as np
 
@@ -187,53 +188,59 @@ print("\nSummary statistics after imputing missing values:")
 print(penguins.describe())  # confirma que não há mais NaNs
 
 #%% 4- Feature Engineering - Categorical Encoding
-
+# TL;DR: Transform text categories into numbers so the model can understand them (One-Hot or Label encoding)
 import pandas as pd
-from sklearn.preprocessing import OneHotEncoder, LabelEncoder
+from sklearn.preprocessing import OneHotEncoder, LabelEncoder # Converter categorias (texto) em números para que o modelo consiga processar
+pd.set_option('display.max_columns', None)
 
 # Load the dataset
-
+penguins = pd.read_csv('alunos_p2/penguins.csv')
 
 # Display the initial dataset
-
+print(penguins.head())
 
 # Create an instance of OneHotEncoder
-onehot_encoder = OneHotEncoder()
+onehot_encoder = OneHotEncoder(sparse_output=False)  # Inicializa o codificador One-Hot
 
 # Transform the 'species' column
-species_encoded = onehot_encoder.fit_transform(penguins[['species']])
+species_encoded = onehot_encoder.fit_transform(penguins[['species']]) # Converte texto em números (One-Hot)
 
 # Convert the result to a DataFrame and concatenate it with the original dataset
-
+encoded_df = pd.DataFrame(
+    species_encoded,
+    columns=onehot_encoder.get_feature_names_out(['species'])
+)
+encoded_df.columns = [col.replace('species', 'encoded_species') for col in encoded_df.columns] # Para mudar o prefixo do nome da coluna
+penguins = pd.concat([penguins, encoded_df], axis=1)  # Adiciona as novas colunas ao dataset
 
 # Display the updated dataset
-
+print(penguins.head())
 
 # Create an instance of LabelEncoder
-label_encoder = LabelEncoder()
+label_encoder = LabelEncoder() # Prepara o encode para transformar species em números inteiros
 
 # Encode the 'species' column
-
+penguins['species_label'] = label_encoder.fit_transform(penguins['species'])
 
 # Display the updated dataset
-
-
-# Note, check the dataframe in the variable in debugging to observre the added columns
+print("Species -> Label mapping:")
+for species, label in zip(label_encoder.classes_, range(len(label_encoder.classes_))):
+    print(f"{species} -> {label}")
 
 #%% 5- Feature Engineering - Binning
-
+# TL;DR: Everything in a specific range of numbers belongs to a category (bin)
 import pandas as pd
-import numpy as np
 from sklearn.datasets import load_iris
 
 # Load the Iris dataset
-
+iris_sklearn = load_iris()
+iris_df = pd.DataFrame(data=iris_sklearn.data, columns=iris_sklearn.feature_names)
 
 # Display the initial dataset
-
+print(iris_df.head())
 
 # Choose the 'sepal length (cm)' column for binning
-
+feature_to_bin = 'sepal length (cm)'
 
 # Define the number of bins (or bin edges)
 bins = [4, 5, 6, 7, 8]
@@ -242,32 +249,38 @@ bins = [4, 5, 6, 7, 8]
 iris_df['sepal_length_bin'] = pd.cut(iris_df[feature_to_bin], bins=bins, labels=['Bin 1', 'Bin 2', 'Bin 3', 'Bin 4'])
 
 # Display the dataset after binning
+print(iris_df[['sepal length (cm)', 'sepal_length_bin']].head(10))
 
 
 #%% 6- Feature Engineering - Interaction Features
-
+# TL;DR: Use pandas to create new columns by combining existing ones, capturing relationships (interactions) between features
 import pandas as pd
 from sklearn.datasets import load_iris
 
 # Load the Iris dataset
-
+iris_sklearn = load_iris()
+iris_df = pd.DataFrame(data=iris_sklearn.data, columns=iris_sklearn.feature_names)
 
 # Display the initial dataset
-
+print(iris_df.head())
 
 # Simple combinations
-
+iris_df['sepal_length_x_width'] = iris_df['sepal length (cm)'] * iris_df['sepal width (cm)']  # multiply
+iris_df['petal_length_plus_width'] = iris_df['petal length (cm)'] + iris_df['petal width (cm)']  # sum
+iris_df['sepal_length_div_petal_length'] = iris_df['sepal length (cm)'] / iris_df['petal length (cm)']  # divide
 
 # Display the dataset after creating simple interactions
-
+print(iris_df.head())
 
 # Complex combination with a onlinear interaction
-
+iris_df['non_linear_interaction'] = (
+    iris_df['sepal length (cm)']**2 +
+    iris_df['petal length (cm)'] * iris_df['petal width (cm)'] +
+    iris_df['petal length (cm)'] * iris_df['sepal width (cm)']
+)
 
 # Display the dataset after creating interactions
-
-
-# Note, check the dataframe in the variable in debugging to observre the added columns
+print(iris_df.head())
 
 #%% 7- Feature Engineering - Feature Scaling
 
