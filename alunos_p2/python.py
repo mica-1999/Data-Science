@@ -65,64 +65,126 @@ import matplotlib.pyplot as plt
 import warnings
 
 # Load the Iris dataset
+iris = sns.load_dataset('iris')  # carrega a dataset sample
 
 # Set up the figure for histograms
+features = iris.columns[:-1]  # todas as colunas numéricas
+plt.figure(figsize=(12,8))    # define o tamanho da figura
 
+for i, feature in enumerate(features):
+    plt.subplot(2, 2, i+1)   # organiza 4 gráficos em 2 linhas x 2 colunas
+    sns.histplot(iris[feature], kde=False, bins=15, color='skyblue')  # histograma
+    plt.title(f'Histogram of {feature}')  # título de cada gráfico
+
+plt.tight_layout()  # ajusta o espaçamento entre os subplots
+plt.show()          # exibe os gráficos
 
 # Set up the figure for violin plots
+features = iris.columns[:-1]  # todas as colunas numéricas
 
+for feature in features:
+    plt.figure(figsize=(8,5))
+    sns.violinplot(x='species', y=feature, data=iris, palette='Set2')  # distribuição por espécie
+    plt.title(f'Violin Plot of {feature} by Species')  # título do gráfico
+    plt.show()
 
 # Set up the figure for kernel density estimate plots
+features = iris.columns[:-1]  # todas as colunas numéricas
 
+for feature in features:
+    plt.figure(figsize=(8,5))
+    sns.kdeplot(data=iris, x=feature, hue='species', fill=True, palette='Set2')  # KDE por espécie
+    plt.title(f'KDE Plot of {feature} by Species')  # título do gráfico
+    plt.xlabel(feature)                             # nome do eixo X
+    plt.ylabel('Density')                           # nome do eixo Y
+    plt.show()
 
 # Set up the figure for swarm plots
+features = iris.columns[:-1]  # todas as colunas numéricas
 
+for feature in features:
+    plt.figure(figsize=(8,5))
+    sns.swarmplot(x='species', y=feature, data=iris, palette='Set2')  # cada ponto representa uma amostra
+    plt.title(f'Swarm Plot of {feature} by Species')  # título do gráfico
+    plt.show()
 
 #%% 3-Data Pre-processing
-
 import pandas as pd
 import numpy as np
 
 # Read the penguins dataset
-penguins = pd.read_csv('penguins.csv')  # Replace with your actual file path
+penguins = pd.read_csv('alunos_p2/penguins.csv')  # Substitua pelo caminho correto do seu CSV
 
 # Display the original dataset
 print("Original Dataset:")
-print(penguins)
+print(penguins.head())  # mostra as primeiras 5 linhas
+print("\nDataset Info:")
+print(penguins.info())  # informações gerais, incluindo NaNs
+print("\nSummary Statistics:")
+print(penguins.describe())  # estatísticas básicas das colunas numéricas
 
-# Dealing with missing values
-# Option 1: Delete missing values
+#==============================
+# Option 1: Delete rows with missing values
+# TL;DR: Use if very few missing rows (<5%) and removing them won’t bias dataset
+#==============================
+penguins_dropna = penguins.dropna()  # remove todas as linhas que tiverem pelo menos um valor nulo
+print("\nDataset after dropping rows with missing values:")
+print(penguins_dropna.info())  # verifica o novo tamanho e valores nulos
 
+#==============================
+# Option 2: Interpolate missing values by species
+# TL;DR: Use for continuous numeric data with a logical group (e.g., species), keeps trends
+#==============================
+cols_numeric = ['bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'body_mass_g']
 
-# Option 2: Interpolate missing values (only valid if done withing samples of the same class to be tested, for example, island)
+# Interpolação dentro de cada espécie
+penguins[cols_numeric] = penguins.groupby('species')[cols_numeric].transform(lambda x: x.interpolate())
 
+# Display dataset after interpolation
+print("\nFirst 5 rows after interpolation:")
+print(penguins.head())
 
-# Display datasets after handling missing values
+print("\nSummary statistics after interpolation:")
+print(penguins.describe())
 
-
-# Dealing with outliers for all numerical columns
+#==============================
+# Option 3: Remove outliers using IQR
+# TL;DR: Use if extreme values are likely errors; keep real extreme measurements if valid
+#==============================
 for column_name in penguins.select_dtypes(include=[np.number]).columns:
     # Calculate the IQR (InterQuartile Range)
+    Q1 = penguins[column_name].quantile(0.25)  # primeiro quartil
+    Q3 = penguins[column_name].quantile(0.75)  # terceiro quartil
+    IQR = Q3 - Q1
 
+    # Define lower and upper bounds
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
 
-    # Define the lower and upper bounds to identify outliers
-
-
-    # Remove outliers
+    # Replace outliers with NaN
     penguins[column_name] = np.where(
         (penguins[column_name] < lower_bound) | (penguins[column_name] > upper_bound),
         np.nan,
         penguins[column_name]
     )
 
-# Display dataset after handling outliers for all numerical columns
+# Display dataset after removing outliers
+print("\nFirst 5 rows after handling outliers:")
+print(penguins.head())
 
-
-# Impute missing values using the mean value of the column
-
+#==============================
+# Option 4: Impute missing values using the mean
+# TL;DR: Use if you want to keep all rows and missing values are random; median if skewed
+#==============================
+for column_name in penguins.select_dtypes(include=[np.number]).columns:
+    penguins[column_name] = penguins[column_name].fillna(penguins[column_name].mean())
 
 # Display dataset after imputing missing values
+print("\nFirst 5 rows after imputing missing values with mean:")
+print(penguins.head())
 
+print("\nSummary statistics after imputing missing values:")
+print(penguins.describe())  # confirma que não há mais NaNs
 
 #%% 4- Feature Engineering - Categorical Encoding
 
