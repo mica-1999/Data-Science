@@ -283,35 +283,52 @@ iris_df['non_linear_interaction'] = (
 print(iris_df.head())
 
 #%% 7- Feature Engineering - Feature Scaling
-
+# TL;DR: Rescale numerical features so models treat them equally:
+# - StandardScaler → z-score scaling (mean=0, std=1)
+# - MinMaxScaler → scales features to [0, 1] range
 import pandas as pd
 from sklearn.datasets import load_iris
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 # Load the Iris dataset
-
+iris_sklearn = load_iris()
+iris_df = pd.DataFrame(data=iris_sklearn.data, columns=iris_sklearn.feature_names)
 
 # Display the initial dataset
+print(iris_df.head())
 
 # Apply Standardization
-
+standard_scaler = StandardScaler()  # Initialize the scaler
+iris_standard_scaled = standard_scaler.fit_transform(iris_df)  # Fit to data and transform
 
 # Convert the standardized array back to a DataFrame for display
-
+iris_standard_df = pd.DataFrame(
+    iris_standard_scaled,
+    columns=iris_df.columns
+)
 
 # Display the dataset after standardization
+print(iris_standard_df.head())
 
 # Apply Min-Max Scaling
-
+minmax_scaler = MinMaxScaler()  # Initialize the scaler
+iris_minmax_scaled = minmax_scaler.fit_transform(iris_df)  # Fit to data and transform
 
 # Convert the min-max scaled array back to a DataFrame for display
-
+iris_minmax_df = pd.DataFrame(
+    iris_minmax_scaled,
+    columns=iris_df.columns
+)
 
 # Display the dataset after min-max scaling
-
+print(iris_minmax_df.head())
 
 #%% 8- Feature Engineering - Data Balancing
-
+# TL;DR: Garantir que cada classe tenha aproximadamente o mesmo número de amostras para evitar viés no modelo.
+# - Dataset original → desbalanceado (mais benignos que malignos)
+# - RandomOverSampler → duplica amostras da classe minoritária
+# - SMOTE → gera amostras sintéticas para a classe minoritária
+# - RandomUnderSampler → remove amostras da classe majoritária
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -320,26 +337,58 @@ from imblearn.over_sampling import RandomOverSampler, SMOTE
 from imblearn.under_sampling import RandomUnderSampler
 
 # Load the Breast Cancer Wisconsin (Diagnostic) dataset
-
+cancer_sklearn = load_breast_cancer()
+cancer_df = pd.DataFrame(data=cancer_sklearn.data, columns=cancer_sklearn.feature_names)
+cancer_df['target'] = cancer_sklearn.target  # add target column
 
 # Display the initial class distribution
-
+sns.countplot(x='target', data=cancer_df)
+plt.title('Initial Class Distribution')
+plt.xlabel('Class (0 = malignant, 1 = benign)')
+plt.ylabel('Number of samples')
+plt.show()
 
 # Standard Oversampling
+ros = RandomOverSampler(random_state=42)  # initialize oversampler
+X_resampled, y_resampled = ros.fit_resample(cancer_df.drop('target', axis=1), cancer_df['target'])
+cancer_ros_df = pd.DataFrame(X_resampled, columns=cancer_df.drop('target', axis=1).columns)
+cancer_ros_df['target'] = y_resampled
 
 # Display the class distribution after oversampling
-
+sns.countplot(x='target', data=cancer_ros_df)
+plt.title('Class Distribution After Random Oversampling')
+plt.xlabel('Class (0 = malignant, 1 = benign)')
+plt.ylabel('Number of samples')
+plt.show()
 
 # Oveesample with SMOTE
-
+smote = SMOTE(random_state=42)
+X_smote, y_smote = smote.fit_resample(cancer_df.drop('target', axis=1), cancer_df['target'])
+cancer_smote_df = pd.DataFrame(X_smote, columns=cancer_df.drop('target', axis=1).columns)
+cancer_smote_df['target'] = y_smote
 
 # Display the class distribution after SMOTE
-
+sns.countplot(x='target', data=cancer_smote_df)
+plt.title('Class Distribution After SMOTE Oversampling')
+plt.xlabel('Class (0 = malignant, 1 = benign)')
+plt.ylabel('Number of samples')
+plt.show()
 
 # Standard Undersampling
-
+rus = RandomUnderSampler(random_state=42)  # initialize undersampler
+X_under, y_under = rus.fit_resample(cancer_df.drop('target', axis=1), cancer_df['target'])
+cancer_rus_df = pd.DataFrame(X_under, columns=cancer_df.drop('target', axis=1).columns)
+cancer_rus_df['target'] = y_under
 
 # Display the class distribution after undersampling
-
+sns.countplot(x='target', data=cancer_rus_df)
+plt.title('Class Distribution After Random Undersampling')
+plt.xlabel('Class (0 = malignant, 1 = benign)')
+plt.ylabel('Number of samples')
+plt.show()
 
 # Save the datasets after each transformation
+cancer_df.to_csv('alunos_p2/cancer_original.csv', index=False)          # Original dataset
+cancer_ros_df.to_csv('alunos_p2/cancer_oversampled.csv', index=False)  # Random Oversampling
+cancer_smote_df.to_csv('alunos_p2/cancer_smote.csv', index=False)      # SMOTE Oversampling
+cancer_rus_df.to_csv('alunos_p2/cancer_undersampled.csv', index=False) # Random Undersampling
