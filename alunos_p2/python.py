@@ -1,9 +1,8 @@
 #%% 1- Exploratory Data Analysis (EDA)
-# Importing necessary libraries
 import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
-import warnings
+import seaborn as sns  # visualizações estatísticas
+import matplotlib.pyplot as plt # criação de gráficos básicos
+import warnings # controlar mensagens de aviso
 
 # Filter FutureWarnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -12,38 +11,53 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 iris = sns.load_dataset('iris')
 
 # Display basic information about the dataset
-
+print(iris.info())
 
 # Display the first few rows of the dataset
-
+print(iris.head())  # mostra as primeiras 5 linhas do dataset
 
 # Summary statistics (using the Pandas dataframe)
+numeric_cols = iris.select_dtypes(include=np.number)   # seleciona apenas colunas numéricas
 
+print("Basic statistics:\n", numeric_cols.describe())          # estatísticas básicas: count, mean, std, min, quartis e max
+print("\nMedian values:\n", numeric_cols.median())            # mediana apenas das colunas numéricas
+print("\nMean values:\n", numeric_cols.mean())                # média apenas das colunas numéricas
+print("\nStandard deviation:\n", numeric_cols.std())          # desvio padrão apenas das colunas numéricas
 
 # Convert to a numpy array without using the last columns (is the label)
-
+iris_values = iris.iloc[:, :-1].values  # pega todas as linhas e todas as colunas exceto a última
 
 # Summary statistics with NumPy
 print("\nSummary Statistics with NumPy:")
 # Mean
-
+mean_values = np.mean(iris_values, axis=0)  # calcula a média de cada coluna
+print("Mean values:", mean_values)
 
 # Median
-
+median_values = np.median(iris_values, axis=0)  # calcula a mediana de cada coluna
+print("Median values:", median_values)
 
 # Standard Deviation
-
+std_values = np.std(iris_values, axis=0, ddof=1)  # calcula o desvio padrão de cada coluna (ddof=1 para amostra)
+print("Standard Deviation:", std_values)
 
 # Data distribution analysis
 # Pairplot for overall distribution
 sns.pairplot(iris, hue='species')
 plt.show()
 
-# Boxplot for each feature
+# Boxplot for each feature by species
+features = iris.columns[:-1]  # todas as colunas numéricas
 
+for feature in features:
+    plt.figure(figsize=(8,5))
+    sns.boxplot(x='species', y=feature, data=iris, palette='Set2')  # cores diferentes por espécie
+    plt.title(f"Boxplot of {feature} by Species")   # título do gráfico
+    plt.show()
 
 # Correlation Analysis
-
+corr_matrix = iris.iloc[:, :-1].corr()  # calcula a correlação entre as colunas numéricas
+print(corr_matrix)                       # imprime a matriz de correlação
 
 #%% 2- Visualization
 import seaborn as sns
