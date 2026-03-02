@@ -1,85 +1,70 @@
-#%% 1- perform web scraping
-import requests
-from bs4 import BeautifulSoup
-from pprint import pprint
+# %% 1- perform web scraping
+import requests  # Usada para fazer pedidos HTTP (GET) para obter HTML de páginas
+from bs4 import BeautifulSoup  # Converte HTML bruto numa estrutura pesquisável (árvore DOM)
+from pprint import pprint  # Para print das listas/dicionários de forma organizada
 
-url = 'https://www.ayush.nz/technology'  # URL of the page to scrape
+url = 'https://www.ayush.nz/technology'
 headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
 }
 
+# Envia o pedido GET ao servidor e guarda a resposta
 response = requests.get(url, headers=headers)
 
+# Verifica se o pedido foi bem sucedido
 if response.status_code != 200:
     print(f"Failed to retrieve page. Status code: {response.status_code}")
     exit()
 
+# Converte o HTML recebido numa estrutura navegável
 html = BeautifulSoup(response.text, 'html.parser')
-articles = html.select('div.article-link')  # Select article containers
+articles = html.select('div.article-link') # Seleciona todos os <div> com classe 'article-link' (cada artigo)
 
 my_data = []
 
+# Loop por cada artigo encontrado
 for article in articles:
     try:
-        # Extract title from <a> tag
+        # Extrair o título do <a> dentro do artigo
         title_tag = article.find('a')
-        title = title_tag.get_text(strip=True)
-        url = title_tag['href']
+        title = title_tag.get_text(strip=True)  # Texto limpo, sem espaços extra
+        url = title_tag['href']  # Link do artigo
 
-        # Extract date from the muted span
+        # Extrair a data do <span class="muted">
         date = article.find('span', class_='muted').get_text(strip=True).replace('/', '').strip()
 
-        # Extract excerpt (some articles have images in excerpts)
+        # Extrair o resumo (alguns artigos têm imagens)
         excerpt_div = article.find('div', class_='excerpt')
         if excerpt_div:
-            # Remove any images from excerpt
+            # Remove qualquer <img> dentro do resumo
             for img in excerpt_div.find_all('img'):
                 img.decompose()
-            excerpt = excerpt_div.get_text(strip=True)
+            excerpt = excerpt_div.get_text(strip=True)  # Texto limpo
         else:
-            excerpt = "No excerpt available"
+            excerpt = "No excerpt available"  # Caso não exista resumo
 
-        # Append the data to the list
+        # Adiciona os dados do artigo à lista
         my_data.append({
             'title': title,
             'url': url,
             'date': date,
             'excerpt': excerpt
         })
-        
+
     except Exception as e:
         print(f"Error processing article: {e}")
         continue
 
+# Mostra todos os artigos extraídos de forma legível
 pprint(my_data)
 
 
 #%% 2- use an API to retrieve data and store it locally
 import requests
-import numpy as np
+import numpy as np # Para armazenar dados em arrays e manipular facilmente
 
 # Define the API endpoint
 api_url = "https://jsonplaceholder.typicode.com/posts"
-
-# Example of the data:
-#  {
-#    "userId": 1,
-#    "id": 1,
-#    "title": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
-#    "body": "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto"
-#  },
-#  {
-#    "userId": 1,
-#    "id": 2,
-#    "title": "qui est esse",
-#    "body": "est rerum tempore vitae\nsequi sint nihil reprehenderit dolor beatae ea dolores neque\nfugiat blanditiis voluptate porro vel nihil molestiae ut reiciendis\nqui aperiam non debitis possimus qui neque nisi nulla"
-#  },
-#  {
-#    "userId": 1,
-#    "id": 3,
-#    "title": "ea molestias quasi exercitationem repellat qui ipsa sit aut",
-#    "body": "et iusto sed quo iure\nvoluptatem occaecati omnis eligendi aut ad\nvoluptatem doloribus vel accusantium quis pariatur\nmolestiae porro eius odio et labore et velit aut"
-#  }, ...
 
 try:
     # Send a GET request to the API
@@ -94,19 +79,20 @@ try:
         user_ids = [post['userId'] for post in data]
 
         # Convert the list to a NumPy array
-
+        user_ids_array = np.array(user_ids)
 
         # Specify the file path where you want to save the CSV file
-
+        csv_file_path = "user_ids.csv"
 
         # Save the NumPy array as a CSV file
-
+        np.savetxt(csv_file_path, user_ids_array, delimiter=",", fmt="%d")
 
         # Print the array
-
+        print(user_ids_array)
 
         # Calculate the mean of user IDs
-
+        mean_user_id = np.mean(user_ids_array)
+        print("Mean of user IDs:", mean_user_id)
 
     else:
         print("Error: Unable to fetch data from the API. Status code:", response.status_code)
