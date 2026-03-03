@@ -27,4 +27,34 @@
 #   - As colunas derivadas de atrasos reais (ARR_DELAY, DEP_DELAY, DELAY_DUE_*) não devem ser usadas.
 
 # Phase 2: Data Analysis and Clensing
-#%% 1- Pre-processing 
+#%% 1- Pre-processing
+import pandas as pd
+
+# Loading CSV
+df = pd.read_csv('flights_sample_3m.csv')
+df_eda = df.copy()  # Pre pre-processing
+#print(df.head()) # Checking if it loaded, primeiras linhas
+#print(df.info()) # Info sobre as colunas e tipos de valores (string, int, etc..)
+#print(df.describe()) # Dados estatísticos sobre as colunas
+
+# Remover linhas desnecessárias ou que contêm null em colunas importantes
+#print(df.isnull().sum()) # Verificando o nº de nulls nas colunas por linha
+#print("New dataset shape:", df.shape) # linhas x colunas nº
+df.dropna(subset=['CRS_ELAPSED_TIME'], inplace=True) # Apaga as linhas onde "CRS_ELAPSED_TIME" é null
+
+# Dataset após apagar linhas
+print("\nDataset after dropping rows with missing CRS_ELAPSED_TIME:")
+print(df.isnull().sum())
+print("New dataset shape:", df.shape)
+
+# Remover colunas desnecessárias, estas colunas são dados do futuro e não ajudam a prever
+cols_to_drop = [
+    'ARR_DELAY', 'DEP_DELAY', 'DELAY_DUE_CARRIER', 'DELAY_DUE_WEATHER',
+    'DELAY_DUE_NAS', 'DELAY_DUE_SECURITY', 'DELAY_DUE_LATE_AIRCRAFT',
+    'ARR_TIME', 'DEP_TIME', 'WHEELS_OFF', 'WHEELS_ON',
+    'TAXI_OUT', 'TAXI_IN', 'ELAPSED_TIME', 'AIR_TIME'
+]
+df.drop(columns=cols_to_drop, inplace=True)
+print("New dataset shape:", df.shape) # Verificando se foram apagadas
+
+
