@@ -41,20 +41,26 @@ df_eda = df.copy()  # Pre pre-processing
 #print(df.isnull().sum()) # Verificando o nº de nulls nas colunas por linha
 #print("New dataset shape:", df.shape) # linhas x colunas nº
 df.dropna(subset=['CRS_ELAPSED_TIME'], inplace=True) # Apaga as linhas onde "CRS_ELAPSED_TIME" é null
+df = df[df['CANCELLED'] == 0] # Apenas removemos as linhas dos voos que foram cancelados, podemos agora remover a coluna
 
 # Dataset após apagar linhas
 print("\nDataset after dropping rows with missing CRS_ELAPSED_TIME:")
 print(df.isnull().sum())
-print("New dataset shape:", df.shape)
 
 # Remover colunas desnecessárias, estas colunas são dados do futuro e não ajudam a prever
 cols_to_drop = [
     'ARR_DELAY', 'DEP_DELAY', 'DELAY_DUE_CARRIER', 'DELAY_DUE_WEATHER',
     'DELAY_DUE_NAS', 'DELAY_DUE_SECURITY', 'DELAY_DUE_LATE_AIRCRAFT',
     'ARR_TIME', 'DEP_TIME', 'WHEELS_OFF', 'WHEELS_ON',
-    'TAXI_OUT', 'TAXI_IN', 'ELAPSED_TIME', 'AIR_TIME'
+    'TAXI_OUT', 'TAXI_IN', 'ELAPSED_TIME', 'AIR_TIME','CANCELLED','CANCELLATION_CODE'
 ]
 df.drop(columns=cols_to_drop, inplace=True)
 print("New dataset shape:", df.shape) # Verificando se foram apagadas
+print(df.isnull().sum()) # Verificar se o df ficou limpo.
+
+# Remover outliers using IQR
+
+
+
 
 
