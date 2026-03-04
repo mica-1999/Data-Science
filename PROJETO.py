@@ -27,13 +27,15 @@
 #   - As colunas derivadas de atrasos reais (ARR_DELAY, DEP_DELAY, DELAY_DUE_*) não devem ser usadas.
 
 # Phase 2: Data Analysis and Clensing
-#%% 1- Pre-processing, Feature Engineering
+#%% 1- Pre-processing
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 # Loading CSV
 df = pd.read_csv('flights_sample_3m.csv')
+print(list(df.columns))
 df_eda = df.copy()  # Pre pre-processing, guarda o original para a parte EDA
 #print(df.head()) # Checking if it loaded, primeiras linhas
 #print(df.info()) # Info sobre as colunas e tipos de valores (string, int, etc..)
@@ -41,27 +43,27 @@ df_eda = df.copy()  # Pre pre-processing, guarda o original para a parte EDA
 
 # Remover linhas desnecessárias ou que contêm null em colunas importantes
 #print(df.isnull().sum()) # Verificando o nº de nulls nas colunas por linha
-#print("New dataset shape:", df.shape) # linhas x colunas nº
+#print("Dataset shape:", df.shape) # linhas x colunas nº
 df.dropna(subset=['CRS_ELAPSED_TIME'], inplace=True) # Apaga as linhas onde "CRS_ELAPSED_TIME" é null
 df = df[df['CANCELLED'] == 0] # Apenas removemos as linhas dos voos que foram cancelados, podemos agora remover a coluna
 
 # Dataset após apagar linhas
-print("\nDataset after dropping rows with missing CRS_ELAPSED_TIME:")
-print(df.isnull().sum())
+#print("\nDataset after dropping rows with missing CRS_ELAPSED_TIME:")
+#print(df.isnull().sum())
 
 # Remover colunas desnecessárias, estas colunas são dados do futuro e não ajudam a prever
 cols_to_drop = [
-    'ARR_DELAY', 'DEP_DELAY', 'DELAY_DUE_CARRIER', 'DELAY_DUE_WEATHER',
+    'DEP_DELAY', 'DELAY_DUE_CARRIER', 'DELAY_DUE_WEATHER',
     'DELAY_DUE_NAS', 'DELAY_DUE_SECURITY', 'DELAY_DUE_LATE_AIRCRAFT',
     'ARR_TIME', 'DEP_TIME', 'WHEELS_OFF', 'WHEELS_ON',
     'TAXI_OUT', 'TAXI_IN', 'ELAPSED_TIME', 'AIR_TIME','CANCELLED','CANCELLATION_CODE'
 ]
 df.drop(columns=cols_to_drop, inplace=True)
-print("New dataset shape:", df.shape) # Verificando se foram apagadas
+#print("New dataset shape:", df.shape) # Verificando se foram apagadas
 print(df.isnull().sum()) # Verificar se o df ficou limpo.
 print(list(df.columns))
 
-# Remover outliers using IQR
+# Remover outliers usando IQR
 numeric_cols = ['CRS_ELAPSED_TIME', 'DISTANCE'] # Colunas que fazem sentido, NOTA: PERGUNTAR ao prof se DISTANCE é bom de remover outliers
 #print(df[numeric_cols].describe()) # Before handling
 for column_name in numeric_cols:
@@ -85,9 +87,9 @@ for column_name in numeric_cols:
 
 #print(df[numeric_cols].describe()) # After handling
 
-# Featuring Engineering : Categorical Encoding
+# Categorical Encoding
 categorical_cols = ['AIRLINE_CODE', 'ORIGIN', 'DEST'] # Unicos que fazem sentido dividir em categorias para o modelo
-# Separa-se o OneHotEncoded e o Label Encode
+# Separa-se o OneHotEncoded e o Label Encode (mais valores e menos valores)
 print("Number of unique airlines:", df['AIRLINE_CODE'].nunique())
 print(f"Number of unique origin airports:", df['ORIGIN'].nunique())
 print(f"Number of unique destination airports:", df['DEST'].nunique())
@@ -105,9 +107,80 @@ encoded_airline_df.columns = [col.replace('AIRLINE_CODE', 'encoded_airline') for
 df = pd.concat([df, encoded_airline_df], axis=1)
 
 # LabelEncoder para o ORIGIN e DEST pois contêm muitos valores unicos
-label_encoder = LabelEncoder()
-df['ORIGIN_label'] = label_encoder.fit_transform(df['ORIGIN'])
-df['DEST_label'] = label_encoder.fit_transform(df['DEST'])
+le_origin = LabelEncoder()
+le_dest = LabelEncoder()
+
+df['ORIGIN_label'] = le_origin.fit_transform(df['ORIGIN'])
+df['DEST_label'] = le_dest.fit_transform(df['DEST'])
+
+# Apagando as colunas para o modelo e verificando se tudo ok
+df.drop(columns=['AIRLINE_CODE', 'ORIGIN', 'DEST'], inplace=True)
+#print("New dataset shape:", df.shape)
+#print(list(df.columns)) # Verifica-se se as colunas encoded foram adicionadas
+
+# Standarization/Normalization
+standard_scaler = StandardScaler()  # Initialize scaler standard
+standard_scaled = standard_scaler.fit_transform(df[numeric_cols])
+minmax_scaler = MinMaxScaler()  # Initialize scaler minmax
+minmax_scaled = minmax_scaler.fit_transform(df[numeric_cols])
+
+# Convert to DataFrame and add suffix "_std"
+df_standard_scaled = pd.DataFrame(
+    standard_scaled,
+    columns=[f"{col}_std" for col in numeric_cols]
+)
+# Convert to DataFrame and add suffix "_minmax"
+df_minmax_scaled = pd.DataFrame(
+    minmax_scaled,
+    columns=[f"{col}_minmax" for col in numeric_cols]
+)
+# Concatenate scaled columns with original DataFrame
+df = pd.concat([df, df_standard_scaled, df_minmax_scaled], axis=1)
+df.to_csv('flights_cleaned_scaled.csv', index=False)
+
+#%% 2- Exploratory Data Analysis (EDA)
+import seaborn as sns
+import matplotlib.pyplot as plt
+import warnings
+
+# Filter FutureWarnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
+
+# Numeric columns for analysis
+numeric_cols = ['CRS_ELAPSED_TIME', 'DISTANCE', 'ARR_DELAY']
+
+# Summary statistics with pandas
+print("\nBasic statistics:\n", df_eda[numeric_cols].describe())
+print("\nMedian values:\n", df_eda[numeric_cols].median())
+print("\nMean values:\n", df_eda[numeric_cols].mean())
+print("\nStandard deviation:\n", df_eda[numeric_cols].std())
+
+# Data distribution analysis
+# Histograms
+for col in numeric_cols:
+    plt.figure(figsize=(8,4))
+    sns.histplot(df_eda[col], bins=50, kde=True)
+    plt.title(f"Distribution of {col}")
+    plt.show()
+
+# Boxplots by airline (categorical)
+for col in ['ARR_DELAY']:
+    plt.figure(figsize=(12,6))
+    sns.boxplot(x='AIRLINE', y=col, data=df_eda)
+    plt.xticks(rotation=45)
+    plt.title(f"{col} by Airline")
+    plt.show()
+
+# Correlation matrix
+corr_matrix = df_eda[numeric_cols].corr()
+print("\nCorrelation Matrix:\n", corr_matrix)
+
+# Heatmap of correlations
+plt.figure(figsize=(6,5))
+sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
+plt.title("Correlation Heatmap")
+plt.show()
+
 
 
 
