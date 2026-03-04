@@ -30,6 +30,7 @@
 #%% 1- Pre-processing, Feature Engineering
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 
 # Loading CSV
 df = pd.read_csv('flights_sample_3m.csv')
@@ -84,8 +85,31 @@ for column_name in numeric_cols:
 
 #print(df[numeric_cols].describe()) # After handling
 
-# Categorical Encoding
+# Featuring Engineering : Categorical Encoding
 categorical_cols = ['AIRLINE_CODE', 'ORIGIN', 'DEST'] # Unicos que fazem sentido dividir em categorias para o modelo
+# Separa-se o OneHotEncoded e o Label Encode
+print("Number of unique airlines:", df['AIRLINE_CODE'].nunique())
+print(f"Number of unique origin airports:", df['ORIGIN'].nunique())
+print(f"Number of unique destination airports:", df['DEST'].nunique())
+
+# HotEncoder para o AIRLINE_CODE pois contém poucos valores únicos
+onehot_encoder = OneHotEncoder(sparse_output=False)
+airline_encoded = onehot_encoder.fit_transform(df[['AIRLINE_CODE']])
+
+# Converte para df e adiciona ao df 'limpo'
+encoded_airline_df = pd.DataFrame(
+    airline_encoded,
+    columns=onehot_encoder.get_feature_names_out(['AIRLINE_CODE'])
+)
+encoded_airline_df.columns = [col.replace('AIRLINE_CODE', 'encoded_airline') for col in encoded_airline_df.columns]
+df = pd.concat([df, encoded_airline_df], axis=1)
+
+# LabelEncoder para o ORIGIN e DEST pois contêm muitos valores unicos
+label_encoder = LabelEncoder()
+df['ORIGIN_label'] = label_encoder.fit_transform(df['ORIGIN'])
+df['DEST_label'] = label_encoder.fit_transform(df['DEST'])
+
+
 
 
 
