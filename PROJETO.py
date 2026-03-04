@@ -27,12 +27,13 @@
 #   - As colunas derivadas de atrasos reais (ARR_DELAY, DEP_DELAY, DELAY_DUE_*) não devem ser usadas.
 
 # Phase 2: Data Analysis and Clensing
-#%% 1- Pre-processing
+#%% 1- Pre-processing, Feature Engineering
 import pandas as pd
+import numpy as np
 
 # Loading CSV
 df = pd.read_csv('flights_sample_3m.csv')
-df_eda = df.copy()  # Pre pre-processing
+df_eda = df.copy()  # Pre pre-processing, guarda o original para a parte EDA
 #print(df.head()) # Checking if it loaded, primeiras linhas
 #print(df.info()) # Info sobre as colunas e tipos de valores (string, int, etc..)
 #print(df.describe()) # Dados estatísticos sobre as colunas
@@ -57,8 +58,36 @@ cols_to_drop = [
 df.drop(columns=cols_to_drop, inplace=True)
 print("New dataset shape:", df.shape) # Verificando se foram apagadas
 print(df.isnull().sum()) # Verificar se o df ficou limpo.
+print(list(df.columns))
 
 # Remover outliers using IQR
+numeric_cols = ['CRS_ELAPSED_TIME', 'DISTANCE'] # Colunas que fazem sentido, NOTA: PERGUNTAR ao prof se DISTANCE é bom de remover outliers
+#print(df[numeric_cols].describe()) # Before handling
+for column_name in numeric_cols:
+    Q1 = df[column_name].quantile(0.25)
+    Q3 = df[column_name].quantile(0.75)
+    IQR = Q3 - Q1
+
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+
+    # Replace outliers with NaN
+    df[column_name] = np.where(
+        (df[column_name] < lower_bound) | (df[column_name] > upper_bound),
+        np.nan,
+        df[column_name]
+    )
+
+# Preenchendo os nans com valores medianos
+for column_name in numeric_cols:
+    df[column_name] = df[column_name].fillna(df[column_name].median())
+
+#print(df[numeric_cols].describe()) # After handling
+
+# Categorical Encoding
+categorical_cols = ['AIRLINE_CODE', 'ORIGIN', 'DEST'] # Unicos que fazem sentido dividir em categorias para o modelo
+
+
 
 
 
