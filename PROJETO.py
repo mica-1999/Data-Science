@@ -163,7 +163,7 @@ for col in numeric_cols:
     plt.title(f"Distribution of {col}")
     plt.show()
 
-# Boxplots by airline (categorical)
+# Boxplots por companhia
 for col in ['ARR_DELAY']:
     plt.figure(figsize=(12,6))
     sns.boxplot(x='AIRLINE', y=col, data=df_eda)
@@ -181,6 +181,44 @@ sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
 plt.title("Correlation Heatmap")
 plt.show()
 
+# KDE Plots (density per airline)
+for col in ['ARR_DELAY']:
+    plt.figure(figsize=(12,6))
+    sns.kdeplot(data=df_eda, x=col, hue='AIRLINE', fill=True, alpha=0.5)
+    plt.title(f"KDE Plot of {col} by Airline")
+    plt.xlabel(col)
+    plt.ylabel('Density')
+    plt.show()
+
+# Scatter Plots ARR_DELAY VS DISTANCE E ARR_DELAY VS SCHEDULE_DURATION, AQUI ENCONTRA-SE CORRELAÇÃO DISTANCE-SCHEDULE
+plt.figure(figsize=(8,6))
+sns.scatterplot(x='DISTANCE', y='ARR_DELAY', data=df_eda, alpha=0.3)
+plt.title("Scatter Plot: Distance vs Arrival Delay")
+plt.xlabel("Distance (miles)")
+plt.ylabel("Arrival Delay (minutes)")
+plt.show()
+plt.figure(figsize=(8,6))
+sns.scatterplot(x='CRS_ELAPSED_TIME', y='ARR_DELAY', data=df_eda, alpha=0.3)
+plt.title("Scatter Plot: Scheduled Duration vs Arrival Delay")
+plt.xlabel("Scheduled Duration (minutes)")
+plt.ylabel("Arrival Delay (minutes)")
+plt.show()
+
+#%% 3- Dimensionality Reduction (PCA + UMAP)
+from sklearn.decomposition import PCA
+import umap
+
+# Pegando nas colunas númericas e encoded e ignora o resto
+features_for_dr = df.drop(
+    columns=[
+        'ARR_DELAY', 'AIRLINE', 'ORIGIN_CITY', 'DEST_CITY',
+        'FL_DATE', 'FL_NUMBER', 'DOT_CODE', 'AIRLINE_DOT',
+        'CRS_ELAPSED_TIME_minmax', 'DISTANCE_minmax'  # keep only standardized
+    ],
+    errors='ignore'
+)
+print("Features used for PCA/UMAP:", list(features_for_dr.columns))
+print(features_for_dr.isnull().sum())
 
 
 
