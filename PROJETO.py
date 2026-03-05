@@ -221,6 +221,32 @@ print("Features used for PCA/UMAP:", list(features_for_dr.columns))
 print(features_for_dr.isnull().sum())
 
 
+# Insights do EDA:
+#
+# Tempo de voo (CRS_ELAPSED_TIME):
+# - Média: ~142 min (~2h 22min)
+# - Desvio padrão: 71 min → grande variabilidade; há voos muito curtos e muito longos
+# - Mínimo/Máximo: 1 min → 705 min
+#     * 1 min provavelmente é erro ou outlier
+#     * 705 min pode ser válido, mas incomum se houver muitos voos desse tipo
+# - Percentis 25/75: 90 / 172 → a maioria dos voos dura entre 1.5 e 3 horas
+#
+# Atraso na chegada (ARR_DELAY):
+# - Mediana: -7 min < Média: ~4 min
+#     * A maioria dos voos chega um pouco mais cedo
+#     * Alguns atrasos grandes aumentam a média
+#
+# Correlações importantes:
+# - CRS_ELAPSED_TIME ↔ DISTANCE: 0.98 → voos mais longos (maior distância) levam mais tempo
+# - ARR_DELAY ↔ CRS_ELAPSED_TIME: -0.002
+# - ARR_DELAY ↔ DISTANCE: 0.002
+#     * Atrasos não dependem diretamente da distância ou duração do voo
+#
+# Histogramas:
+# - Elapsed Time: confirma a distribuição indicada pelos quartis
+# - Distance: a maioria dos voos cobre menos de 1.000 milhas, frequência diminui em rotas mais longas
+# - ARR_DELAY: confirma a tendência de a maioria dos voos chegar no horário ou adiantados
+
 
 
 
