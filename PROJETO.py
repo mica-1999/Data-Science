@@ -1,4 +1,4 @@
-# Phase 1: Problem Formulation
+#%% 1- Phase 1: Problem Formulation
 # Dataset: [Flight Delay and Cancellation]
 # Source: U.S. Department of Transportation On-Time Performance Reporting System
 # Cada linha corresponde a um voo comercial programado nos EUA, com informações sobre tal
@@ -26,8 +26,7 @@
 #   - Excluir ou tratar os voos cancelados/desviados com cuidado. (P-02)
 #   - As colunas derivadas de atrasos reais (ARR_DELAY, DEP_DELAY, DELAY_DUE_*) não devem ser usadas.
 
-# Phase 2: Data Analysis and Clensing
-#%% 1- Pre-processing
+#%% 2- Phase 2: Data Analysis and Clensing / Pre-processing
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
@@ -45,7 +44,7 @@ df_eda = df.copy()  # Pre pre-processing, guarda o original para a parte EDA
 #print(df.isnull().sum()) # Verificando o nº de nulls nas colunas por linha
 #print("Dataset shape:", df.shape) # linhas x colunas nº
 df.dropna(subset=['CRS_ELAPSED_TIME'], inplace=True) # Apaga as linhas onde "CRS_ELAPSED_TIME" é null
-df = df[df['CANCELLED'] == 0] # Apenas removemos as linhas dos voos que foram cancelados, podemos agora remover a coluna
+df = df[df['CANCELLED'] == 0] # Apenas removemos as linhas dos voos cancelados, podemos agora remover a coluna
 
 # Dataset após apagar linhas
 #print("\nDataset after dropping rows with missing CRS_ELAPSED_TIME:")
@@ -61,7 +60,7 @@ cols_to_drop = [
 df.drop(columns=cols_to_drop, inplace=True)
 #print("New dataset shape:", df.shape) # Verificando se foram apagadas
 print(df.isnull().sum()) # Verificar se o df ficou limpo.
-print(list(df.columns))
+# print(list(df.columns))
 
 # Remover outliers usando IQR
 numeric_cols = ['CRS_ELAPSED_TIME', 'DISTANCE'] # Colunas que fazem sentido, NOTA: PERGUNTAR ao prof se DISTANCE é bom de remover outliers
@@ -86,6 +85,7 @@ for column_name in numeric_cols:
     df[column_name] = df[column_name].fillna(df[column_name].median())
 
 #print(df[numeric_cols].describe()) # After handling
+df = df.reset_index(drop=True) # Faz reset do index para resolver as linhas saltadas
 
 # Categorical Encoding
 categorical_cols = ['AIRLINE_CODE', 'ORIGIN', 'DEST'] # Unicos que fazem sentido dividir em categorias para o modelo
@@ -119,9 +119,9 @@ df.drop(columns=['AIRLINE_CODE', 'ORIGIN', 'DEST'], inplace=True)
 #print(list(df.columns)) # Verifica-se se as colunas encoded foram adicionadas
 
 # Standarization/Normalization
-standard_scaler = StandardScaler()  # Initialize scaler standard
+standard_scaler = StandardScaler()
 standard_scaled = standard_scaler.fit_transform(df[numeric_cols])
-minmax_scaler = MinMaxScaler()  # Initialize scaler minmax
+minmax_scaler = MinMaxScaler()
 minmax_scaled = minmax_scaler.fit_transform(df[numeric_cols])
 
 # Convert to DataFrame and add suffix "_std"
@@ -137,8 +137,9 @@ df_minmax_scaled = pd.DataFrame(
 # Concatenate scaled columns with original DataFrame
 df = pd.concat([df, df_standard_scaled, df_minmax_scaled], axis=1)
 df.to_csv('flights_cleaned_scaled.csv', index=False)
+print(f"Processing done")
 
-#%% 2- Exploratory Data Analysis (EDA)
+#%% 3- Phase 2: Data Analysis and Cleansing / Exploratory Data Analysis (EDA)
 import seaborn as sns
 import matplotlib.pyplot as plt
 import warnings
@@ -204,25 +205,97 @@ plt.xlabel("Scheduled Duration (minutes)")
 plt.ylabel("Arrival Delay (minutes)")
 plt.show()
 
-#%% 3- Dimensionality Reduction (PCA + UMAP)
+print(f"EDA with original dataset done")
+
+#%% 4a - Phase 2: Dimensionality Reduction / PCA
 from sklearn.decomposition import PCA
-import umap
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 # Pegando nas colunas númericas e encoded e ignora o resto
 features_for_dr = df.drop(
     columns=[
         'ARR_DELAY', 'AIRLINE', 'ORIGIN_CITY', 'DEST_CITY',
         'FL_DATE', 'FL_NUMBER', 'DOT_CODE', 'AIRLINE_DOT',
-        'CRS_ELAPSED_TIME_minmax', 'DISTANCE_minmax'  # keep only standardized
+        'CRS_ELAPSED_TIME_minmax', 'DISTANCE_minmax'
     ],
     errors='ignore'
 )
-print("Features used for PCA/UMAP:", list(features_for_dr.columns))
-print(features_for_dr.isnull().sum())
+print(features_for_dr.isnull().sum()) # confirmando que não existe valores nulos antes de PCA ou UMAP
+
+# PCA (Principal Component Analysis)
+pca = PCA(n_components=2)  # reduzindo as novas colunas  e conjunto de dados para 2 dimensões
+pca_result = pca.fit_transform(features_for_dr)
+
+df_pca = pd.DataFrame(
+    pca_result,
+    columns=['PC1', 'PC2']
+)
+# adicionando as companhias para comparação
+df_pca['AIRLINE'] = df['AIRLINE'].values
+
+plt.figure(figsize=(14,6))
+sns.scatterplot(
+    data=df_pca,
+    x='PC1',
+    y='PC2',
+    hue='AIRLINE',
+    palette='tab20',
+    alpha=0.5
+)
+
+plt.title("PCA Projection of Flights")
+plt.xlabel("Principal Component 1")
+plt.ylabel("Principal Component 2")
+plt.legend(bbox_to_anchor=(1.05,1), loc='upper left')
+plt.show()
+
+print("Explained variance ratio:", pca.explained_variance_ratio_)
+print("Total variance explained:", sum(pca.explained_variance_ratio_))
+
+#%% 4b - Phase 2: Dimensionality Reduction / UMAP
+import umap
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+umap_reducer = umap.UMAP(
+    n_components=2,     # project down to 2D
+    n_neighbors=50,     # controls local vs global structure
+    min_dist=0.1,       # how tightly points are clustered
+    random_state=42
+)
+
+# Fit and transform
+print("Fitting")
+umap_result = umap_reducer.fit_transform(features_for_dr) # pode demorar.
+
+# Create DataFrame for plotting
+df_umap = pd.DataFrame(
+    umap_result,
+    columns=['UMAP1', 'UMAP2']
+)
+df_umap['AIRLINE'] = df['AIRLINE'].values
 
 
-# Insights do EDA:
-#
+# Plot UMAP projection
+print("Plotting")
+plt.figure(figsize=(14,6))
+sns.scatterplot(
+    data=df_umap.sample(200000, random_state=42),
+    x='UMAP1',
+    y='UMAP2',
+    hue='AIRLINE',
+    palette='tab20',
+    alpha=0.5
+)
+plt.title("UMAP Projection of Flights")
+plt.xlabel("UMAP 1")
+plt.ylabel("UMAP 2")
+plt.legend(bbox_to_anchor=(1.05,1), loc='upper left')
+plt.show()
+
+#%% 5- Phase 2: Data Analysis and Cleansing /  Insights from EDA
+
 # Tempo de voo (CRS_ELAPSED_TIME):
 # - Média: ~142 min (~2h 22min)
 # - Desvio padrão: 71 min → grande variabilidade; há voos muito curtos e muito longos
@@ -247,10 +320,43 @@ print(features_for_dr.isnull().sum())
 # - Distance: a maioria dos voos cobre menos de 1.000 milhas, frequência diminui em rotas mais longas
 # - ARR_DELAY: confirma a tendência de a maioria dos voos chegar no horário ou adiantados
 
+#%% 6- Phase 2:  Hypothesis Testing
+import pandas as pd
+from scipy.stats import pearsonr, ttest_ind, f_oneway
 
+df_hyp = df.copy()
+df_hyp = df_hyp.dropna(subset=['ARR_DELAY']) # remove as linhas que têm nans, no preprocessing não havia problem manter
+print(df_hyp.isnull().sum()) # Verificando se foram removidas
+airline_counts = df_hyp['AIRLINE'].value_counts()
+top_airlines = airline_counts.index[:2]
+print("Using these airlines for t-test:", top_airlines)
 
+# 1️⃣ Hypothesis 1: Correlation between flight distance and arrival delay
+print("Hypothesis 1: Distance vs Arrival Delay")
+corr_coeff, p_value = pearsonr(df_hyp['DISTANCE'], df_hyp['ARR_DELAY'])
+print(f"Pearson correlation coefficient: {corr_coeff:.3f}, p-value: {p_value:.3f}")
+if p_value < 0.05:
+    print("✅ Significant correlation: flight distance is associated with delays.\n")
+else:
+    print("❌ No significant correlation between distance and delay.\n")
 
+# 2️⃣ Hypothesis 2: Airline A vs Airline B mean arrival delays (t-test)
+airline_a = df_hyp['ARR_DELAY'][df_hyp['AIRLINE'] == 'Southwest Airlines Co.']
+airline_b = df_hyp['ARR_DELAY'][df_hyp['AIRLINE'] == 'Delta Air Lines Inc.']
 
+print("Hypothesis 2: Southwest Airlines Co. vs Delta Air Lines Inc. mean arrival delays") # muda airline para diferentes e verificar.
+t_stat, p_value = ttest_ind(airline_a, airline_b)
+print(f"T-statistic: {t_stat:.3f}, p-value: {p_value:.3f}")
+if p_value < 0.05:
+    print("✅ Significant difference in mean delays between AA and DL.\n")
+else:
+    print("❌ No significant difference in mean delays between AA and DL.\n")
 
-
-
+# 3️⃣ Hypothesis 3: All airlines have the same mean arrival delay (ANOVA)
+groups = [df_hyp['ARR_DELAY'][df_hyp['AIRLINE'] == airline] for airline in df_hyp['AIRLINE'].unique()]
+f_stat, p_value = f_oneway(*groups)
+print(f"F-statistic: {f_stat:.3f}, p-value: {p_value:.3f}")
+if p_value < 0.05:
+    print("✅ Significant differences exist in delays between airlines.\n")
+else:
+    print("❌ No significant differences in delays between airlines.\n")
