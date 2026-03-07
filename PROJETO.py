@@ -1,25 +1,27 @@
-#%% 1- Phase 2: Data Analysis and Clensing / Pre-processing
+#%% 1- Phase 2: Data Analysis and Cleansing / Pre-processing
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 # Loading CSV
-df = pd.read_csv('flights_sample_3m.csv')
-print(list(df.columns))
+df = pd.read_csv('datasets/flights_sample_3m.csv')
 df_eda = df.copy()  # Pre pre-processing, guarda o original para a parte EDA
-#print(df.head()) # Checking if it loaded, primeiras linhas
+
+# Prints
+print("Starting pre-processing... ")
+#print(df.head()) # Checking if it loaded
 #print(df.info()) # Info sobre as colunas e tipos de valores (string, int, etc..)
 #print(df.describe()) # Dados estatísticos sobre as colunas
-
-# Remover linhas desnecessárias ou que contêm null em colunas importantes
 #print(df.isnull().sum()) # Verificando o nº de nulls nas colunas por linha
 #print("Dataset shape:", df.shape) # linhas x colunas nº
+print(list(df.columns)) # Lista de colunas
+
+# Remover linhas desnecessárias/contêm null em colunas importantes
 df.dropna(subset=['CRS_ELAPSED_TIME'], inplace=True) # Apaga as linhas onde "CRS_ELAPSED_TIME" é null
 df = df[df['CANCELLED'] == 0] # Apenas removemos as linhas dos voos cancelados, podemos agora remover a coluna
 
 # Dataset após apagar linhas
-#print("\nDataset after dropping rows with missing CRS_ELAPSED_TIME:")
 #print(df.isnull().sum())
 
 # Remover colunas desnecessárias, estas colunas são dados do futuro e não ajudam a prever
@@ -32,7 +34,6 @@ cols_to_drop = [
 df.drop(columns=cols_to_drop, inplace=True)
 #print("New dataset shape:", df.shape) # Verificando se foram apagadas
 print(df.isnull().sum()) # Verificar se o df ficou limpo.
-# print(list(df.columns))
 
 # Remover outliers usando IQR
 numeric_cols = ['CRS_ELAPSED_TIME', 'DISTANCE'] # Colunas que fazem sentido, NOTA: PERGUNTAR ao prof se DISTANCE é bom de remover outliers
@@ -57,10 +58,11 @@ for column_name in numeric_cols:
     df[column_name] = df[column_name].fillna(df[column_name].median())
 
 #print(df[numeric_cols].describe()) # After handling
-df = df.reset_index(drop=True) # Faz reset do index para resolver as linhas saltadas
+df = df.reset_index(drop=True) # Faz reset do index para resolver as linhas saltadas (quando foram removidas)
 
 # Categorical Encoding
 categorical_cols = ['AIRLINE_CODE', 'ORIGIN', 'DEST'] # Unicos que fazem sentido dividir em categorias para o modelo
+
 # Separa-se o OneHotEncoded e o Label Encode (mais valores e menos valores)
 print("Number of unique airlines:", df['AIRLINE_CODE'].nunique())
 print(f"Number of unique origin airports:", df['ORIGIN'].nunique())
@@ -78,19 +80,22 @@ encoded_airline_df = pd.DataFrame(
 encoded_airline_df.columns = [col.replace('AIRLINE_CODE', 'encoded_airline') for col in encoded_airline_df.columns]
 df = pd.concat([df, encoded_airline_df], axis=1)
 
-# LabelEncoder para o ORIGIN e DEST pois contêm muitos valores unicos
+# LabelEncoder para o ORIGIN e DEST, pois contêm muitos valores unicos
 le_origin = LabelEncoder()
 le_dest = LabelEncoder()
-
 df['ORIGIN_label'] = le_origin.fit_transform(df['ORIGIN'])
 df['DEST_label'] = le_dest.fit_transform(df['DEST'])
 
-# Apagando as colunas para o modelo e verificando se tudo ok
+# Apagando as colunas para o modelo
 df.drop(columns=['AIRLINE_CODE', 'ORIGIN', 'DEST'], inplace=True)
 #print("New dataset shape:", df.shape)
 #print(list(df.columns)) # Verifica-se se as colunas encoded foram adicionadas
 
-# Standarization/Normalization
+# Guardando dataset pre-scaled só em caso
+df_cleaned = df.copy()
+df.to_csv('datasets/flights_cleaned.csv', index=False)
+
+# Standardization/Normalization
 standard_scaler = StandardScaler()
 standard_scaled = standard_scaler.fit_transform(df[numeric_cols])
 minmax_scaler = MinMaxScaler()
@@ -108,7 +113,7 @@ df_minmax_scaled = pd.DataFrame(
 )
 # Concatenate scaled columns with original DataFrame
 df = pd.concat([df, df_standard_scaled, df_minmax_scaled], axis=1)
-df.to_csv('flights_cleaned_scaled.csv', index=False)
+df.to_csv('datasets/flights_cleaned_and_scaled.csv', index=False)
 print(f"Processing done")
 
 #%% 2- Phase 2: Data Analysis and Cleansing / Exploratory Data Analysis (EDA)
@@ -129,30 +134,37 @@ print("\nMean values:\n", df_eda[numeric_cols].mean())
 print("\nStandard deviation:\n", df_eda[numeric_cols].std())
 
 # Data distribution analysis
+plt.figure(figsize=(12,6))
+sns.countplot(y='AIRLINE', data=df_eda, order=df_eda['AIRLINE'].value_counts().index[:10])
+plt.title("Top 10 Airlines by Number of Flights")
+plt.xlabel("Count")
+plt.ylabel("Airline")
+plt.savefig("Outputs/top10_airlines_count.png", bbox_inches='tight')
+plt.close()
+
 # Histograms
 for col in numeric_cols:
     plt.figure(figsize=(8,4))
     sns.histplot(df_eda[col], bins=50, kde=True)
     plt.title(f"Distribution of {col}")
-    plt.show()
+    plt.savefig(f"Outputs/hist_{col}.png", bbox_inches='tight')
+    plt.close()
 
-# Boxplots por companhia
+# Box plots por companhia
 for col in ['ARR_DELAY']:
     plt.figure(figsize=(12,6))
     sns.boxplot(x='AIRLINE', y=col, data=df_eda)
     plt.xticks(rotation=45)
-    plt.title(f"{col} by Airline")
-    plt.show()
+    plt.savefig(f"Outputs/boxplot_{col}_by_airline.png", bbox_inches='tight')
+    plt.close()
 
-# Correlation matrix
+# Correlation matrix & Heatmap
 corr_matrix = df_eda[numeric_cols].corr()
-print("\nCorrelation Matrix:\n", corr_matrix)
-
-# Heatmap of correlations
 plt.figure(figsize=(6,5))
 sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
 plt.title("Correlation Heatmap")
-plt.show()
+plt.savefig("Outputs/corr_heatmap.png", bbox_inches='tight')
+plt.close()
 
 # KDE Plots (density per airline)
 for col in ['ARR_DELAY']:
@@ -161,21 +173,25 @@ for col in ['ARR_DELAY']:
     plt.title(f"KDE Plot of {col} by Airline")
     plt.xlabel(col)
     plt.ylabel('Density')
-    plt.show()
+    plt.savefig(f"Outputs/kde_{col}_by_airline.png", bbox_inches='tight')
+    plt.close()
 
-# Scatter Plots ARR_DELAY VS DISTANCE E ARR_DELAY VS SCHEDULE_DURATION, AQUI ENCONTRA-SE CORRELAÇÃO DISTANCE-SCHEDULE
+# Scatter Plots ARR_DELAY VS DISTANCE E ARR_DELAY VS SCHEDULE_DURATION, CORRELAÇÃO DISTANCE-SCHEDULE
 plt.figure(figsize=(8,6))
 sns.scatterplot(x='DISTANCE', y='ARR_DELAY', data=df_eda, alpha=0.3)
 plt.title("Scatter Plot: Distance vs Arrival Delay")
 plt.xlabel("Distance (miles)")
 plt.ylabel("Arrival Delay (minutes)")
-plt.show()
+plt.savefig(f"Outputs/scatter_distance_arrdelay.png", bbox_inches='tight')
+plt.close()
+
 plt.figure(figsize=(8,6))
 sns.scatterplot(x='CRS_ELAPSED_TIME', y='ARR_DELAY', data=df_eda, alpha=0.3)
 plt.title("Scatter Plot: Scheduled Duration vs Arrival Delay")
 plt.xlabel("Scheduled Duration (minutes)")
 plt.ylabel("Arrival Delay (minutes)")
-plt.show()
+plt.savefig(f"Outputs/scatter_crs_arrdelay.png", bbox_inches='tight')
+plt.close()
 
 print(f"EDA with original dataset done")
 
@@ -184,7 +200,7 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Pegando nas colunas númericas e encoded e ignora o resto
+# Apenas colunas númericas/encoded
 features_for_dr = df.drop(
     columns=[
         'ARR_DELAY', 'AIRLINE', 'ORIGIN_CITY', 'DEST_CITY',
@@ -193,19 +209,18 @@ features_for_dr = df.drop(
     ],
     errors='ignore'
 )
-print(features_for_dr.isnull().sum()) # confirmando que não existe valores nulos antes de PCA ou UMAP
+#print(features_for_dr.isnull().sum())
 
 # PCA (Principal Component Analysis)
-pca = PCA(n_components=2)  # reduzindo as novas colunas  e conjunto de dados para 2 dimensões
+pca = PCA(n_components=2)  # reduzindo as novas colunas e conjunto de dados para 2 dimensões
 pca_result = pca.fit_transform(features_for_dr)
-
 df_pca = pd.DataFrame(
     pca_result,
     columns=['PC1', 'PC2']
 )
-# adicionando as companhias para comparação
-df_pca['AIRLINE'] = df['AIRLINE'].values
+df_pca['AIRLINE'] = df['AIRLINE'].values # adicionando as companhias para comparação
 
+# Scatterplot
 plt.figure(figsize=(14,6))
 sns.scatterplot(
     data=df_pca,
@@ -213,14 +228,15 @@ sns.scatterplot(
     y='PC2',
     hue='AIRLINE',
     palette='tab20',
-    alpha=0.5
+    alpha=0.6
 )
 
 plt.title("PCA Projection of Flights")
 plt.xlabel("Principal Component 1")
 plt.ylabel("Principal Component 2")
 plt.legend(bbox_to_anchor=(1.05,1), loc='upper left')
-plt.show()
+plt.savefig("Outputs/pca_projection.png", bbox_inches='tight')
+plt.close()
 
 print("Explained variance ratio:", pca.explained_variance_ratio_)
 print("Total variance explained:", sum(pca.explained_variance_ratio_))
@@ -237,9 +253,9 @@ umap_reducer = umap.UMAP(
     random_state=42
 )
 
-# Fit and transform
+# Fit and transform (demora um pouco)
 print("Fitting")
-umap_result = umap_reducer.fit_transform(features_for_dr) # pode demorar.
+umap_result = umap_reducer.fit_transform(features_for_dr)
 
 # Create DataFrame for plotting
 df_umap = pd.DataFrame(
@@ -247,7 +263,6 @@ df_umap = pd.DataFrame(
     columns=['UMAP1', 'UMAP2']
 )
 df_umap['AIRLINE'] = df['AIRLINE'].values
-
 
 # Plot UMAP projection
 print("Plotting")
@@ -264,44 +279,18 @@ plt.title("UMAP Projection of Flights")
 plt.xlabel("UMAP 1")
 plt.ylabel("UMAP 2")
 plt.legend(bbox_to_anchor=(1.05,1), loc='upper left')
-plt.show()
+plt.savefig("Outputs/umap_projection.png", bbox_inches='tight')
+plt.close()
 
-#%% 4- Phase 2: Data Analysis and Cleansing /  Insights from EDA
-
-# Tempo de voo (CRS_ELAPSED_TIME):
-# - Média: ~142 min (~2h 22min)
-# - Desvio padrão: 71 min → grande variabilidade; há voos muito curtos e muito longos
-# - Mínimo/Máximo: 1 min → 705 min
-#     * 1 min provavelmente é erro ou outlier
-#     * 705 min pode ser válido, mas incomum se houver muitos voos desse tipo
-# - Percentis 25/75: 90 / 172 → a maioria dos voos dura entre 1.5 e 3 horas
-#
-# Atraso na chegada (ARR_DELAY):
-# - Mediana: -7 min < Média: ~4 min
-#     * A maioria dos voos chega um pouco mais cedo
-#     * Alguns atrasos grandes aumentam a média
-#
-# Correlações importantes:
-# - CRS_ELAPSED_TIME ↔ DISTANCE: 0.98 → voos mais longos (maior distância) levam mais tempo
-# - ARR_DELAY ↔ CRS_ELAPSED_TIME: -0.002
-# - ARR_DELAY ↔ DISTANCE: 0.002
-#     * Atrasos não dependem diretamente da distância ou duração do voo
-#
-# Histogramas:
-# - Elapsed Time: confirma a distribuição indicada pelos quartis
-# - Distance: a maioria dos voos cobre menos de 1.000 milhas, frequência diminui em rotas mais longas
-# - ARR_DELAY: confirma a tendência de a maioria dos voos chegar no horário ou adiantados
+print("UMAP done... ")
 
 #%% 6- Phase 2:  Hypothesis Testing
-import pandas as pd
 from scipy.stats import pearsonr, ttest_ind, f_oneway
 
+# Copiando o df cleaned
 df_hyp = df.copy()
 df_hyp = df_hyp.dropna(subset=['ARR_DELAY']) # remove as linhas que têm nans, no preprocessing não havia problem manter
-print(df_hyp.isnull().sum()) # Verificando se foram removidas
-airline_counts = df_hyp['AIRLINE'].value_counts()
-top_airlines = airline_counts.index[:2]
-print("Using these airlines for t-test:", top_airlines)
+#print(df_hyp.isnull().sum())
 
 # 1️⃣ Hypothesis 1: Correlation between flight distance and arrival delay
 print("Hypothesis 1: Distance vs Arrival Delay")
@@ -312,7 +301,7 @@ if p_value < 0.05:
 else:
     print("❌ No significant correlation between distance and delay.\n")
 
-# 2️⃣ Hypothesis 2: Airline A vs Airline B mean arrival delays (t-test)
+# 2️⃣ Hypothesis 2: Airline Southwest Airlines Co. vs Airline Delta Air Lines Inc. mean arrival delays (t-test)
 airline_a = df_hyp['ARR_DELAY'][df_hyp['AIRLINE'] == 'Southwest Airlines Co.']
 airline_b = df_hyp['ARR_DELAY'][df_hyp['AIRLINE'] == 'Delta Air Lines Inc.']
 
