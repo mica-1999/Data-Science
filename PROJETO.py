@@ -1,32 +1,4 @@
-#%% 1- Phase 1: Problem Formulation
-# Dataset: [Flight Delay and Cancellation]
-# Source: U.S. Department of Transportation On-Time Performance Reporting System
-# Cada linha corresponde a um voo comercial programado nos EUA, com informações sobre tal
-
-# Problema:
-# Prever e analisar atrasos em voos domésticos nos EUA.
-# O foco principal é compreender os fatores que influenciam os atrasos na chegada e usá-los para prever atrasos antes da partida.
-# Além disso, identificar padrões no desempenho das companhias aéreas e dos aeroportos.
-#
-# Objetivos: (P-03)
-# 1. Regression Task: Predict arrival delay duration (in minutes) for a given flight based on
-# scheduled times, airline, route, distance, and operational factors
-# 2. Classification task: Categorize flights into three classes:
-#    - On-time (<15-min delay)
-#    - Short delay (15–30 min)
-#    - Long delay (>30 min)
-# 3. Clustering Task: Identify patterns in operational performance for airports
-#    and airlines based on delay behavior and route profiles.
-# 4. Hypothesis testing Task:
-#    - Whether certain airlines are systematically delayed.
-#    - Whether weather has a significant impact on flight delays.
-
-# Notas:
-#   - Utilizar apenas as funcionalidades conhecidas antes da partida para evitar vazamento de dados. (P-02)
-#   - Excluir ou tratar os voos cancelados/desviados com cuidado. (P-02)
-#   - As colunas derivadas de atrasos reais (ARR_DELAY, DEP_DELAY, DELAY_DUE_*) não devem ser usadas.
-
-#%% 2- Phase 2: Data Analysis and Clensing / Pre-processing
+#%% 1- Phase 2: Data Analysis and Clensing / Pre-processing
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
@@ -139,7 +111,7 @@ df = pd.concat([df, df_standard_scaled, df_minmax_scaled], axis=1)
 df.to_csv('flights_cleaned_scaled.csv', index=False)
 print(f"Processing done")
 
-#%% 3- Phase 2: Data Analysis and Cleansing / Exploratory Data Analysis (EDA)
+#%% 2- Phase 2: Data Analysis and Cleansing / Exploratory Data Analysis (EDA)
 import seaborn as sns
 import matplotlib.pyplot as plt
 import warnings
@@ -207,7 +179,7 @@ plt.show()
 
 print(f"EDA with original dataset done")
 
-#%% 4a - Phase 2: Dimensionality Reduction / PCA
+#%% 3a - Phase 2: Dimensionality Reduction / PCA
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -253,7 +225,7 @@ plt.show()
 print("Explained variance ratio:", pca.explained_variance_ratio_)
 print("Total variance explained:", sum(pca.explained_variance_ratio_))
 
-#%% 4b - Phase 2: Dimensionality Reduction / UMAP
+#%% 3b - Phase 2: Dimensionality Reduction / UMAP
 import umap
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -294,7 +266,7 @@ plt.ylabel("UMAP 2")
 plt.legend(bbox_to_anchor=(1.05,1), loc='upper left')
 plt.show()
 
-#%% 5- Phase 2: Data Analysis and Cleansing /  Insights from EDA
+#%% 4- Phase 2: Data Analysis and Cleansing /  Insights from EDA
 
 # Tempo de voo (CRS_ELAPSED_TIME):
 # - Média: ~142 min (~2h 22min)
