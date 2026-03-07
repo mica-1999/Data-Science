@@ -24,6 +24,9 @@ df = df[df['CANCELLED'] == 0] # Apenas removemos as linhas dos voos cancelados, 
 # Dataset após apagar linhas
 #print(df.isnull().sum())
 
+# Guardando para hyp
+df_hyp = df.copy()
+
 # Remover colunas desnecessárias, estas colunas são dados do futuro e não ajudam a prever
 cols_to_drop = [
     'DEP_DELAY', 'DELAY_DUE_CARRIER', 'DELAY_DUE_WEATHER',
@@ -93,7 +96,7 @@ df.drop(columns=['AIRLINE_CODE', 'ORIGIN', 'DEST'], inplace=True)
 
 # Guardando dataset pre-scaled só em caso
 df_cleaned = df.copy()
-df.to_csv('datasets/flights_cleaned.csv', index=False)
+#df.to_csv('datasets/flights_cleaned.csv', index=False)
 
 # Standardization/Normalization
 standard_scaler = StandardScaler()
@@ -113,7 +116,7 @@ df_minmax_scaled = pd.DataFrame(
 )
 # Concatenate scaled columns with original DataFrame
 df = pd.concat([df, df_standard_scaled, df_minmax_scaled], axis=1)
-df.to_csv('datasets/flights_cleaned_and_scaled.csv', index=False)
+#df.to_csv('datasets/flights_cleaned_and_scaled.csv', index=False)
 print(f"Processing done")
 
 #%% 2- Phase 2: Data Analysis and Cleansing / Exploratory Data Analysis (EDA)
@@ -287,10 +290,9 @@ print("UMAP done... ")
 #%% 6- Phase 2:  Hypothesis Testing
 from scipy.stats import pearsonr, ttest_ind, f_oneway
 
-# Copiando o df cleaned
-df_hyp = df.copy()
 df_hyp = df_hyp.dropna(subset=['ARR_DELAY']) # remove as linhas que têm nans, no preprocessing não havia problem manter
 #print(df_hyp.isnull().sum())
+#print(list(df_hyp.columns)) # Lista de colunas
 
 # 1️⃣ Hypothesis 1: Correlation between flight distance and arrival delay
 print("Hypothesis 1: Distance vs Arrival Delay")
@@ -309,9 +311,9 @@ print("Hypothesis 2: Southwest Airlines Co. vs Delta Air Lines Inc. mean arrival
 t_stat, p_value = ttest_ind(airline_a, airline_b)
 print(f"T-statistic: {t_stat:.3f}, p-value: {p_value:.3f}")
 if p_value < 0.05:
-    print("✅ Significant difference in mean delays between AA and DL.\n")
+    print("✅ Significant difference in mean delays between Southwest Airlines Co. and Delta Air Lines Inc. .\n")
 else:
-    print("❌ No significant difference in mean delays between AA and DL.\n")
+    print("❌ No significant difference in mean delays between Southwest Airlines Co. and Delta Air Lines Inc. .\n")
 
 # 3️⃣ Hypothesis 3: All airlines have the same mean arrival delay (ANOVA)
 groups = [df_hyp['ARR_DELAY'][df_hyp['AIRLINE'] == airline] for airline in df_hyp['AIRLINE'].unique()]
@@ -321,3 +323,37 @@ if p_value < 0.05:
     print("✅ Significant differences exist in delays between airlines.\n")
 else:
     print("❌ No significant differences in delays between airlines.\n")
+
+# 4️⃣ Hypothesis 4: Weather Delays VS Arrival Delays
+print("Hypothesis 4: Weather-related delays vs Arrival Delay")
+
+df_weather = df_hyp.dropna(subset=['DELAY_DUE_WEATHER'])
+
+corr_coeff, p_value = pearsonr(df_weather['DELAY_DUE_WEATHER'], df_weather['ARR_DELAY'])
+
+print(f"Pearson correlation coefficient: {corr_coeff:.3f}, p-value: {p_value:.3f}")
+
+if p_value < 0.05:
+    print("✅ Weather-related delays significantly impact arrival delays.\n")
+else:
+    print("❌ Weather-related delays do not significantly impact arrival delays.\n")
+
+# 5️⃣ Hypothesis 5: Departure time vs Arrival Delay
+print("Hypothesis 5: Scheduled Departure Hour vs Arrival Delay")
+
+# Converte inteiros 3 dígitos para 4 com 0 atrás e retira a hora
+df_hyp['CRS_DEP_TIME'] = df_hyp['CRS_DEP_TIME'].astype(str).str.zfill(4)
+df_hyp['DEP_HOUR'] = df_hyp['CRS_DEP_TIME'].str[:2].astype(int)
+
+# Agrupa hora por hora de partida
+hour_groups = [df_hyp['ARR_DELAY'][df_hyp['DEP_HOUR'] == h] for h in sorted(df_hyp['DEP_HOUR'].unique())]
+
+f_stat, p_value = f_oneway(*hour_groups)
+print(f"F-statistic: {f_stat:.3f}, p-value: {p_value:.3f}")
+
+if p_value < 0.05:
+    print("✅ Significant differences in mean arrival delays across departure hours.\n")
+else:
+    print("❌ No significant differences in mean arrival delays across departure hours.\n")
+
+
