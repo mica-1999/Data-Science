@@ -1,8 +1,6 @@
 #%% 1- Phase 2: Data Analysis and Cleansing / Pre-processing
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import OneHotEncoder, LabelEncoder
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 # Loading CSV
 df = pd.read_csv('datasets/flights_sample_3m.csv')
@@ -153,16 +151,12 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Apenas colunas númericas/encoded
-features_for_dr = df.drop(
-    columns=[
-        'ARR_DELAY', 'AIRLINE', 'ORIGIN_CITY', 'DEST_CITY',
-        'FL_DATE', 'FL_NUMBER', 'DOT_CODE', 'AIRLINE_DOT',
-        'CRS_ELAPSED_TIME_minmax', 'DISTANCE_minmax'
-    ],
-    errors='ignore'
-)
-#print(features_for_dr.isnull().sum())
+# Retirando as colunas não numéricas
+features_for_dr = df.drop(columns=['ARR_DELAY','CRS_DEP_TIME','dep_time_bin','flight_duration_bin',
+                                           'distance_bin','CRS_ELAPSED_TIME','DISTANCE',
+                                    'CRS_ELAPSED_TIME_minmax','DISTANCE_minmax','elapsed_x_distance',
+                                   'dep_hour_x_elapsed'],errors='ignore')
+print(list(features_for_dr.columns))
 
 # PCA (Principal Component Analysis)
 pca = PCA(n_components=2)  # reduzindo as novas colunas e conjunto de dados para 2 dimensões
@@ -171,7 +165,7 @@ df_pca = pd.DataFrame(
     pca_result,
     columns=['PC1', 'PC2']
 )
-df_pca['AIRLINE'] = df['AIRLINE'].values # adicionando as companhias para comparação
+df_pca['AIRLINE'] = df_eda.loc[features_for_dr.index, 'AIRLINE'].values # adicionando as companhias para comparação
 
 # Scatterplot
 plt.figure(figsize=(14,6))
@@ -215,7 +209,7 @@ df_umap = pd.DataFrame(
     umap_result,
     columns=['UMAP1', 'UMAP2']
 )
-df_umap['AIRLINE'] = df['AIRLINE'].values
+df_umap['AIRLINE'] = df_eda.loc[features_for_dr.index, 'AIRLINE'].values
 
 # Plot UMAP projection
 print("Plotting")
@@ -307,6 +301,8 @@ else:
     print("❌ No significant differences in mean arrival delays across departure hours.\n")
 
 #%% 7- Phase 3: Model Selection / New Features
+from sklearn.preprocessing import OneHotEncoder, LabelEncoder
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 # Categorical Encoding
 print("Encoding... ")
@@ -402,7 +398,7 @@ df['IS_RUSH_HOUR'] = df['DEP_HOUR'].between(16, 20).astype(int)
 df.drop(columns=['FL_DATE'], inplace=True) # Remover pois já extraimos features boas
 
 print(df[['elapsed_x_distance', 'dep_hour_x_elapsed']].head())
-df.to_csv('datasets/flights_cleaned_and_scaled.csv', index=False)
+#df.to_csv('datasets/flights_cleaned_and_scaled.csv', index=False)
 
 #%% 8- Phase 3: Model Selection / Model Selection - Linear Regression Testing
 from sklearn.model_selection import train_test_split
@@ -412,7 +408,8 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 print(list(df.columns))  # Check all columns
 
 # Preparando
-X = df.drop(columns=['ARR_DELAY', 'CRS_DEP_TIME', 'dep_time_bin', 'flight_duration_bin', 'distance_bin'])
+X = df.drop(columns=['ARR_DELAY', 'CRS_DEP_TIME', 'dep_time_bin', 'flight_duration_bin', 'distance_bin',
+                     'CRS_ELAPSED_TIME_minmax','DISTANCE_minmax'])
 y = df['ARR_DELAY']
 
 # Split into training and testing sets
@@ -442,7 +439,8 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import matplotlib.pyplot as plt
 
 # Prepare features and target
-X = df.drop(columns=['ARR_DELAY', 'CRS_DEP_TIME', 'dep_time_bin', 'flight_duration_bin', 'distance_bin'])
+X = df.drop(columns=['ARR_DELAY', 'CRS_DEP_TIME', 'dep_time_bin', 'flight_duration_bin', 'distance_bin',
+                     'CRS_ELAPSED_TIME_std','DISTANCE_std','CRS_ELAPSED_TIME_minmax','DISTANCE_minmax'])
 y = df['ARR_DELAY']
 
 # Train/test split
