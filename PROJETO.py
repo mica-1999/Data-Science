@@ -20,19 +20,18 @@ print(list(df.columns)) # Lista de colunas
 # Remover linhas desnecessárias/contêm null em colunas importantes
 df.dropna(subset=['CRS_ELAPSED_TIME'], inplace=True) # Apaga as linhas onde "CRS_ELAPSED_TIME" é null
 df = df[df['CANCELLED'] == 0] # Apenas removemos as linhas dos voos cancelados, podemos agora remover a coluna
+df = df[df['DIVERTED'] == 0] # Apenas removemos as linhas dos voos não rotados, podemos agora remover a coluna
+df = df.dropna(subset=['ARR_DELAY']) # Removemos as 2 linhas que tinham null em ARR_DELAY
 
-# Dataset após apagar linhas
-#print(df.isnull().sum())
-
-# Guardando para hyp
-df_hyp = df.copy()
+df_hyp = df.copy() # Guardando para hyp
 
 # Remover colunas desnecessárias, estas colunas são dados do futuro e não ajudam a prever
 cols_to_drop = [
     'DEP_DELAY', 'DELAY_DUE_CARRIER', 'DELAY_DUE_WEATHER',
     'DELAY_DUE_NAS', 'DELAY_DUE_SECURITY', 'DELAY_DUE_LATE_AIRCRAFT',
     'ARR_TIME', 'DEP_TIME', 'WHEELS_OFF', 'WHEELS_ON',
-    'TAXI_OUT', 'TAXI_IN', 'ELAPSED_TIME', 'AIR_TIME','CANCELLED','CANCELLATION_CODE'
+    'TAXI_OUT', 'TAXI_IN', 'ELAPSED_TIME', 'AIR_TIME','CANCELLED','CANCELLATION_CODE','DIVERTED','AIRLINE',
+    'AIRLINE_DOT','DOT_CODE','FL_NUMBER','ORIGIN_CITY','DEST_CITY','CRS_ARR_TIME', 'FL_DATE'
 ]
 df.drop(columns=cols_to_drop, inplace=True)
 #print("New dataset shape:", df.shape) # Verificando se foram apagadas
@@ -59,64 +58,15 @@ for column_name in numeric_cols:
 # Preenchendo os nans com valores medianos
 for column_name in numeric_cols:
     df[column_name] = df[column_name].fillna(df[column_name].median())
+#print(df[numeric_cols].describe()) # Verificando se os max min ficaram resolvidos
 
 #print(df[numeric_cols].describe()) # After handling
 df = df.reset_index(drop=True) # Faz reset do index para resolver as linhas saltadas (quando foram removidas)
 
-# Categorical Encoding
-categorical_cols = ['AIRLINE_CODE', 'ORIGIN', 'DEST'] # Unicos que fazem sentido dividir em categorias para o modelo
-
-# Separa-se o OneHotEncoded e o Label Encode (mais valores e menos valores)
-print("Number of unique airlines:", df['AIRLINE_CODE'].nunique())
-print(f"Number of unique origin airports:", df['ORIGIN'].nunique())
-print(f"Number of unique destination airports:", df['DEST'].nunique())
-
-# HotEncoder para o AIRLINE_CODE pois contém poucos valores únicos
-onehot_encoder = OneHotEncoder(sparse_output=False)
-airline_encoded = onehot_encoder.fit_transform(df[['AIRLINE_CODE']])
-
-# Converte para df e adiciona ao df 'limpo'
-encoded_airline_df = pd.DataFrame(
-    airline_encoded,
-    columns=onehot_encoder.get_feature_names_out(['AIRLINE_CODE'])
-)
-encoded_airline_df.columns = [col.replace('AIRLINE_CODE', 'encoded_airline') for col in encoded_airline_df.columns]
-df = pd.concat([df, encoded_airline_df], axis=1)
-
-# LabelEncoder para o ORIGIN e DEST, pois contêm muitos valores unicos
-le_origin = LabelEncoder()
-le_dest = LabelEncoder()
-df['ORIGIN_label'] = le_origin.fit_transform(df['ORIGIN'])
-df['DEST_label'] = le_dest.fit_transform(df['DEST'])
-
-# Apagando as colunas para o modelo
-df.drop(columns=['AIRLINE_CODE', 'ORIGIN', 'DEST'], inplace=True)
-#print("New dataset shape:", df.shape)
-#print(list(df.columns)) # Verifica-se se as colunas encoded foram adicionadas
-
-# Guardando dataset pre-scaled só em caso
+# Guardando dataset pre-scaled/encoded só em caso
 df_cleaned = df.copy()
-#df.to_csv('datasets/flights_cleaned.csv', index=False)
+df.to_csv('datasets/flights_cleaned.csv', index=False)
 
-# Standardization/Normalization
-standard_scaler = StandardScaler()
-standard_scaled = standard_scaler.fit_transform(df[numeric_cols])
-minmax_scaler = MinMaxScaler()
-minmax_scaled = minmax_scaler.fit_transform(df[numeric_cols])
-
-# Convert to DataFrame and add suffix "_std"
-df_standard_scaled = pd.DataFrame(
-    standard_scaled,
-    columns=[f"{col}_std" for col in numeric_cols]
-)
-# Convert to DataFrame and add suffix "_minmax"
-df_minmax_scaled = pd.DataFrame(
-    minmax_scaled,
-    columns=[f"{col}_minmax" for col in numeric_cols]
-)
-# Concatenate scaled columns with original DataFrame
-df = pd.concat([df, df_standard_scaled, df_minmax_scaled], axis=1)
-#df.to_csv('datasets/flights_cleaned_and_scaled.csv', index=False)
 print(f"Processing done")
 
 #%% 2- Phase 2: Data Analysis and Cleansing / Exploratory Data Analysis (EDA)
@@ -356,4 +306,95 @@ if p_value < 0.05:
 else:
     print("❌ No significant differences in mean arrival delays across departure hours.\n")
 
+#%% 7- Phase 3: Model Selection / New Features
 
+# Categorical Encoding
+print("Encoding... ")
+categorical_cols = ['AIRLINE_CODE', 'ORIGIN', 'DEST'] # Unicos que fazem sentido dividir em categorias para o modelo
+
+# Separa-se o OneHotEncoded e o Label Encode (mais valores e menos valores)
+print("Number of unique airlines:", df['AIRLINE_CODE'].nunique())
+print(f"Number of unique origin airports:", df['ORIGIN'].nunique())
+print(f"Number of unique destination airports:", df['DEST'].nunique())
+
+# HotEncoder para o AIRLINE_CODE pois contém poucos valores únicos
+onehot_encoder = OneHotEncoder(sparse_output=False)
+airline_encoded = onehot_encoder.fit_transform(df[['AIRLINE_CODE']])
+
+# Converte para df e adiciona ao df 'limpo'
+encoded_airline_df = pd.DataFrame(
+    airline_encoded,
+    columns=onehot_encoder.get_feature_names_out(['AIRLINE_CODE'])
+)
+encoded_airline_df.columns = [col.replace('AIRLINE_CODE', 'encoded_airline') for col in encoded_airline_df.columns]
+df = pd.concat([df, encoded_airline_df], axis=1)
+
+# LabelEncoder para o ORIGIN e DEST, pois contêm muitos valores unicos
+le_origin = LabelEncoder()
+le_dest = LabelEncoder()
+df['ORIGIN_label'] = le_origin.fit_transform(df['ORIGIN'])
+df['DEST_label'] = le_dest.fit_transform(df['DEST'])
+
+# Apagando as colunas para o modelo
+df.drop(columns=['AIRLINE_CODE', 'ORIGIN', 'DEST'], inplace=True)
+#print("New dataset shape:", df.shape)
+#print(list(df.columns)) # Verifica-se se as colunas encoded foram adicionadas
+print("Done Encoding..")
+
+# Standardization/Normalization
+print("Standardizing/Normalizing...")
+standard_scaler = StandardScaler()
+standard_scaled = standard_scaler.fit_transform(df[numeric_cols])
+minmax_scaler = MinMaxScaler()
+minmax_scaled = minmax_scaler.fit_transform(df[numeric_cols])
+
+# Convert to DataFrame and add suffix "_std"
+df_standard_scaled = pd.DataFrame(
+    standard_scaled,
+    columns=[f"{col}_std" for col in numeric_cols]
+)
+# Convert to DataFrame and add suffix "_minmax"
+df_minmax_scaled = pd.DataFrame(
+    minmax_scaled,
+    columns=[f"{col}_minmax" for col in numeric_cols]
+)
+# Concatenate scaled columns with original DataFrame
+df = pd.concat([df, df_standard_scaled, df_minmax_scaled], axis=1)
+print("Done Standardizing/Normalizing..")
+
+# Binning
+# Divide CRS_DEP_TIME em 4 bins
+df['CRS_DEP_TIME'] = df['CRS_DEP_TIME'].astype(str).str.zfill(4)
+df['DEP_HOUR'] = df['CRS_DEP_TIME'].str[:2].astype(int)
+hour_bins = [0, 6, 12, 18, 24]
+labels = ['Early Morning', 'Morning', 'Afternoon', 'Evening/Night']
+
+df['dep_time_bin'] = pd.cut(df['DEP_HOUR'], bins=hour_bins, labels=labels, right=False)
+print(df['dep_time_bin'].value_counts())
+
+# Divide CRS_ELAPSED_TIME em 4 bins
+duration_bins = [0, 60, 120, 240, df['CRS_ELAPSED_TIME'].max()+1]
+duration_labels = ['Short', 'Medium-Short', 'Medium-Long', 'Long']
+
+df['flight_duration_bin'] = pd.cut(df['CRS_ELAPSED_TIME'],bins=duration_bins,labels=duration_labels,right=False)
+print(df['flight_duration_bin'].value_counts())
+
+# Divide DISTANCE em 4 bins
+distance_bins = [0, df['DISTANCE'].quantile(0.25), df['DISTANCE'].quantile(0.5),
+                 df['DISTANCE'].quantile(0.75), df['DISTANCE'].max()]
+distance_labels = ['Short', 'Medium-Short', 'Medium-Long', 'Long']
+
+df['distance_bin'] = pd.cut(df['DISTANCE'], bins=distance_bins, labels=distance_labels, include_lowest=True)
+print(df['distance_bin'].value_counts())
+
+# DURATION X DISTANCE
+df['elapsed_x_distance'] = df['CRS_ELAPSED_TIME'] * df['DISTANCE']
+
+# DEP_HOUR X CRS_ELAPSED_TIME
+df['dep_hour_x_elapsed'] = df['DEP_HOUR'] * df['CRS_ELAPSED_TIME']
+
+print(df[['elapsed_x_distance', 'dep_hour_x_elapsed']].head())
+print(list(df.columns)) # Lista de colunas
+df.to_csv('datasets/flights_cleaned_and_scaled.csv', index=False)
+
+#%% 8- Phase 3: Model Selection / Model Selection

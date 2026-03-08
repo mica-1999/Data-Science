@@ -4,7 +4,7 @@
 - **Média:** ~142 min (~2h 22min)  
 - **Desvio padrão:** 71 min → grande variabilidade; há voos muito curtos e muito longos  
 - **Mínimo / Máximo:** 1 min → 705 min  
-  - 1 min provavelmente é erro ou outlier  
+  - 1 min provavelmente é erro ou outlier (tratado em preprocessing)
   - 705 min pode ser válido, mas incomum se houver muitos voos desse tipo  
 - **Percentis 25/75:** 90 / 172 → a maioria dos voos dura entre 1,5 e 3 horas  
 
