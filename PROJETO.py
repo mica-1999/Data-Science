@@ -31,7 +31,7 @@ cols_to_drop = [
     'DELAY_DUE_NAS', 'DELAY_DUE_SECURITY', 'DELAY_DUE_LATE_AIRCRAFT',
     'ARR_TIME', 'DEP_TIME', 'WHEELS_OFF', 'WHEELS_ON',
     'TAXI_OUT', 'TAXI_IN', 'ELAPSED_TIME', 'AIR_TIME','CANCELLED','CANCELLATION_CODE','DIVERTED','AIRLINE',
-    'AIRLINE_DOT','DOT_CODE','FL_NUMBER','ORIGIN_CITY','DEST_CITY','CRS_ARR_TIME', 'FL_DATE'
+    'AIRLINE_DOT','DOT_CODE','FL_NUMBER','ORIGIN_CITY','DEST_CITY','CRS_ARR_TIME'
 ]
 df.drop(columns=cols_to_drop, inplace=True)
 #print("New dataset shape:", df.shape) # Verificando se foram apagadas
@@ -65,7 +65,7 @@ df = df.reset_index(drop=True) # Faz reset do index para resolver as linhas salt
 
 # Guardando dataset pre-scaled/encoded só em caso
 df_cleaned = df.copy()
-df.to_csv('datasets/flights_cleaned.csv', index=False)
+#df.to_csv('datasets/flights_cleaned.csv', index=False)
 
 print(f"Processing done")
 
@@ -393,8 +393,99 @@ df['elapsed_x_distance'] = df['CRS_ELAPSED_TIME'] * df['DISTANCE']
 # DEP_HOUR X CRS_ELAPSED_TIME
 df['dep_hour_x_elapsed'] = df['DEP_HOUR'] * df['CRS_ELAPSED_TIME']
 
+# TIME FEATURES
+df['FL_DATE'] = pd.to_datetime(df['FL_DATE'])
+df['DAY_OF_WEEK'] = df['FL_DATE'].dt.dayofweek
+df['MONTH'] = df['FL_DATE'].dt.month
+df['IS_WEEKEND'] = df['DAY_OF_WEEK'].isin([5, 6]).astype(int)
+df['IS_RUSH_HOUR'] = df['DEP_HOUR'].between(16, 20).astype(int)
+df.drop(columns=['FL_DATE'], inplace=True) # Remover pois já extraimos features boas
+
 print(df[['elapsed_x_distance', 'dep_hour_x_elapsed']].head())
-print(list(df.columns)) # Lista de colunas
 df.to_csv('datasets/flights_cleaned_and_scaled.csv', index=False)
 
-#%% 8- Phase 3: Model Selection / Model Selection
+#%% 8- Phase 3: Model Selection / Model Selection - Linear Regression Testing
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
+print(list(df.columns))  # Check all columns
+
+# Preparando
+X = df.drop(columns=['ARR_DELAY', 'CRS_DEP_TIME', 'dep_time_bin', 'flight_duration_bin', 'distance_bin'])
+y = df['ARR_DELAY']
+
+# Split into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Fit baseline Linear Regression model
+lr = LinearRegression()
+lr.fit(X_train, y_train)
+y_pred = lr.predict(X_test)
+
+# Evaluate
+mae = mean_absolute_error(y_test, y_pred)
+mse = mean_squared_error(y_test, y_pred)
+rmse = np.sqrt(mse)
+r2 = r2_score(y_test, y_pred)
+
+print(f"MAE: {mae:.3f}")
+print(f"RMSE: {rmse:.3f}")
+print(f"R2: {r2:.3f}")
+
+#%% 8- Phase 3: Model Selection / Model Selection - Random Forest Regression
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+import matplotlib.pyplot as plt
+
+# Prepare features and target
+X = df.drop(columns=['ARR_DELAY', 'CRS_DEP_TIME', 'dep_time_bin', 'flight_duration_bin', 'distance_bin'])
+y = df['ARR_DELAY']
+
+# Train/test split
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Initialize Random Forest Regressor
+rf = RandomForestRegressor(
+    n_estimators=200,  # number of trees
+    max_depth=15,      # limit depth to prevent overfitting
+    random_state=42,
+    n_jobs=-1          # use all cores
+)
+
+# Train model
+rf.fit(X_train, y_train)
+
+# Predict
+y_pred = rf.predict(X_test)
+
+# Evaluate
+mae = mean_absolute_error(y_test, y_pred)
+rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+r2 = r2_score(y_test, y_pred)
+
+print(f"Random Forest Results:")
+print(f"MAE: {mae:.3f}")
+print(f"RMSE: {rmse:.3f}")
+print(f"R2: {r2:.3f}")
+
+# Feature Importance
+feature_importance = pd.DataFrame({
+    'feature': X.columns,
+    'importance': rf.feature_importances_
+}).sort_values(by='importance', ascending=False)
+
+print("\nTop Features by Importance:")
+print(feature_importance.head(15))
+
+# Optional: Plot feature importance
+plt.figure(figsize=(10,6))
+plt.barh(feature_importance['feature'].head(15)[::-1], feature_importance['importance'].head(15)[::-1])
+plt.xlabel("Importance")
+plt.title("Top 15 Features - Random Forest")
+plt.show()
