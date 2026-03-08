@@ -34,6 +34,7 @@ cols_to_drop = [
 df.drop(columns=cols_to_drop, inplace=True)
 #print("New dataset shape:", df.shape) # Verificando se foram apagadas
 print(df.isnull().sum()) # Verificar se o df ficou limpo.
+print(list(df.columns)) # Lista de colunas
 
 # Remover outliers usando IQR
 numeric_cols = ['CRS_ELAPSED_TIME', 'DISTANCE'] # Colunas que fazem sentido, NOTA: PERGUNTAR ao prof se DISTANCE é bom de remover outliers
