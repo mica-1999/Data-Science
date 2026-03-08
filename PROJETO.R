@@ -10,7 +10,7 @@ df_eda <- df  # Guarda para a parte EDA
 cat("Starting pre-processing...\n")
 
 # Show columns (Com tudo)
-print(colnames(df))
+#print(colnames(df))
 
 # Remove as linhas que contêm null em linhas importantes
 df <- df %>% 
@@ -135,4 +135,99 @@ p <- ggplot(df_eda, aes(x = CRS_ELAPSED_TIME, y = ARR_DELAY)) +
   theme_minimal()
 ggsave("Outputs/R_scatter_crs_arrdelay.png", plot = p, width = 8, height = 6)
 
-cat("\nEDA with modernized code done\n")
+cat("\nEDA with original dataset done\n")
+
+#%% 3 - Phase 2: Hypotheses Analysis / Hypothesis Testing
+# ==============================
+
+# Load libraries
+library(dplyr)
+library(ggplot2)
+
+# Use cleaned dataset
+df_hyp <- df_cleaned
+
+cat("Starting hypothesis analysis...\n\n")
+
+# ------------------------------
+# 1️⃣ Hypothesis 1: Distance vs Arrival Delay
+# ------------------------------
+cat("Hypothesis 1: Distance vs Arrival Delay\n")
+df_hyp <- df_hyp %>% filter(!is.na(ARR_DELAY) & !is.na(DISTANCE))
+
+cor_test <- cor.test(df_hyp$DISTANCE, df_hyp$ARR_DELAY, method = "pearson")
+cat(sprintf("Pearson correlation coefficient: %.3f, p-value: %.3f\n",
+            cor_test$estimate, cor_test$p.value))
+if(cor_test$p.value < 0.05){
+  cat("✅ Significant correlation: flight distance is associated with delays.\n\n")
+} else {
+  cat("❌ No significant correlation between distance and delay.\n\n")
+}
+
+# ------------------------------
+# 2️⃣ Hypothesis 2: Southwest vs Delta mean arrival delays (t-test)
+# ------------------------------
+cat("Hypothesis 2: Southwest Airlines Co. vs Delta Air Lines Inc. mean arrival delays\n")
+airline_a <- df_hyp$ARR_DELAY[df_hyp$AIRLINE == "Southwest Airlines Co."]
+airline_b <- df_hyp$ARR_DELAY[df_hyp$AIRLINE == "Delta Air Lines Inc."]
+
+t_test <- t.test(airline_a, airline_b)
+cat(sprintf("T-statistic: %.3f, p-value: %.3f\n", t_test$statistic, t_test$p.value))
+if(t_test$p.value < 0.05){
+  cat("✅ Significant difference in mean delays between Southwest and Delta.\n\n")
+} else {
+  cat("❌ No significant difference in mean delays between Southwest and Delta.\n\n")
+}
+
+# ------------------------------
+# 3️⃣ Hypothesis 3: All airlines have same mean arrival delay (ANOVA)
+# ------------------------------
+cat("Hypothesis 3: All airlines mean arrival delay (ANOVA)\n")
+anova_test <- aov(ARR_DELAY ~ AIRLINE, data = df_hyp)
+anova_summary <- summary(anova_test)
+f_stat <- anova_summary[[1]]$`F value`[1]
+p_value <- anova_summary[[1]]$`Pr(>F)`[1]
+cat(sprintf("F-statistic: %.3f, p-value: %.3f\n", f_stat, p_value))
+if(p_value < 0.05){
+  cat("✅ Significant differences exist in delays between airlines.\n\n")
+} else {
+  cat("❌ No significant differences in delays between airlines.\n\n")
+}
+
+# ------------------------------
+# 4️⃣ Hypothesis 4: Weather Delays vs Arrival Delays
+# ------------------------------
+cat("Hypothesis 4: Weather-related delays vs Arrival Delay\n")
+df_weather <- df_hyp %>% filter(!is.na(DELAY_DUE_WEATHER) & !is.na(ARR_DELAY))
+
+cor_test_weather <- cor.test(df_weather$DELAY_DUE_WEATHER, df_weather$ARR_DELAY)
+cat(sprintf("Pearson correlation coefficient: %.3f, p-value: %.3f\n",
+            cor_test_weather$estimate, cor_test_weather$p.value))
+if(cor_test_weather$p.value < 0.05){
+  cat("✅ Weather-related delays significantly impact arrival delays.\n\n")
+} else {
+  cat("❌ Weather-related delays do not significantly impact arrival delays.\n\n")
+}
+
+# ------------------------------
+# 5️⃣ Hypothesis 5: Departure Hour vs Arrival Delay (ANOVA)
+# ------------------------------
+cat("Hypothesis 5: Scheduled Departure Hour vs Arrival Delay\n")
+
+# Convert CRS_DEP_TIME to hour
+df_hyp <- df_hyp %>%
+  mutate(CRS_DEP_TIME = sprintf("%04d", CRS_DEP_TIME),
+         DEP_HOUR = as.integer(substr(CRS_DEP_TIME, 1, 2)))
+
+anova_hour <- aov(ARR_DELAY ~ factor(DEP_HOUR), data = df_hyp)
+anova_hour_summary <- summary(anova_hour)
+f_stat_hour <- anova_hour_summary[[1]]$`F value`[1]
+p_value_hour <- anova_hour_summary[[1]]$`Pr(>F)`[1]
+cat(sprintf("F-statistic: %.3f, p-value: %.3f\n", f_stat_hour, p_value_hour))
+if(p_value_hour < 0.05){
+  cat("✅ Significant differences in mean arrival delays across departure hours.\n")
+} else {
+  cat("❌ No significant differences in mean arrival delays across departure hours.\n")
+}
+
+cat("\nHypothesis testing done.\n")
