@@ -37,7 +37,7 @@ print(df.isnull().sum()) # Verificar se o df ficou limpo.
 print(list(df.columns)) # Lista de colunas
 
 # Remover outliers usando IQR
-numeric_cols = ['CRS_ELAPSED_TIME', 'DISTANCE'] # Colunas que fazem sentido, NOTA: PERGUNTAR ao prof se DISTANCE é bom de remover outliers
+numeric_cols = ['CRS_ELAPSED_TIME','DISTANCE'] # Colunas que fazem sentido
 #print(df[numeric_cols].describe()) # Before handling
 for column_name in numeric_cols:
     Q1 = df[column_name].quantile(0.25)
@@ -57,9 +57,7 @@ for column_name in numeric_cols:
 # Preenchendo os nans com valores medianos
 for column_name in numeric_cols:
     df[column_name] = df[column_name].fillna(df[column_name].median())
-#print(df[numeric_cols].describe()) # Verificando se os max min ficaram resolvidos
 
-#print(df[numeric_cols].describe()) # After handling
 df = df.reset_index(drop=True) # Faz reset do index para resolver as linhas saltadas (quando foram removidas)
 
 # Guardando dataset pre-scaled/encoded só em caso
@@ -91,7 +89,7 @@ sns.countplot(y='AIRLINE', data=df_eda, order=df_eda['AIRLINE'].value_counts().i
 plt.title("Top 10 Airlines by Number of Flights")
 plt.xlabel("Count")
 plt.ylabel("Airline")
-plt.savefig("Outputs/top10_airlines_count.png", bbox_inches='tight')
+plt.savefig("OutputFiles/Python/preFeatureEngineering/top10_airlines_count.png", bbox_inches='tight')
 plt.close()
 
 # Histograms
@@ -99,7 +97,7 @@ for col in numeric_cols:
     plt.figure(figsize=(8,4))
     sns.histplot(df_eda[col], bins=50, kde=True)
     plt.title(f"Distribution of {col}")
-    plt.savefig(f"Outputs/hist_{col}.png", bbox_inches='tight')
+    plt.savefig(f"OutputFiles/Python/preFeatureEngineering/hist_{col}.png", bbox_inches='tight')
     plt.close()
 
 # Box plots por companhia
@@ -107,7 +105,7 @@ for col in ['ARR_DELAY']:
     plt.figure(figsize=(12,6))
     sns.boxplot(x='AIRLINE', y=col, data=df_eda)
     plt.xticks(rotation=45)
-    plt.savefig(f"Outputs/boxplot_{col}_by_airline.png", bbox_inches='tight')
+    plt.savefig(f"OutputFiles/Python/preFeatureEngineering/boxplot_{col}_by_airline.png", bbox_inches='tight')
     plt.close()
 
 # Correlation matrix & Heatmap
@@ -115,7 +113,7 @@ corr_matrix = df_eda[numeric_cols].corr()
 plt.figure(figsize=(6,5))
 sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
 plt.title("Correlation Heatmap")
-plt.savefig("Outputs/corr_heatmap.png", bbox_inches='tight')
+plt.savefig("OutputFiles/Python/preFeatureEngineering/corr_heatmap.png", bbox_inches='tight')
 plt.close()
 
 # KDE Plots (density per airline)
@@ -125,7 +123,7 @@ for col in ['ARR_DELAY']:
     plt.title(f"KDE Plot of {col} by Airline")
     plt.xlabel(col)
     plt.ylabel('Density')
-    plt.savefig(f"Outputs/kde_{col}_by_airline.png", bbox_inches='tight')
+    plt.savefig(f"OutputFiles/Python/preFeatureEngineering/kde_{col}_by_airline.png", bbox_inches='tight')
     plt.close()
 
 # Scatter Plots ARR_DELAY VS DISTANCE E ARR_DELAY VS SCHEDULE_DURATION, CORRELAÇÃO DISTANCE-SCHEDULE
@@ -134,7 +132,7 @@ sns.scatterplot(x='DISTANCE', y='ARR_DELAY', data=df_eda, alpha=0.3)
 plt.title("Scatter Plot: Distance vs Arrival Delay")
 plt.xlabel("Distance (miles)")
 plt.ylabel("Arrival Delay (minutes)")
-plt.savefig(f"Outputs/scatter_distance_arrdelay.png", bbox_inches='tight')
+plt.savefig(f"OutputFiles/Python/preFeatureEngineering/scatter_distance_arrdelay.png", bbox_inches='tight')
 plt.close()
 
 plt.figure(figsize=(8,6))
@@ -142,7 +140,7 @@ sns.scatterplot(x='CRS_ELAPSED_TIME', y='ARR_DELAY', data=df_eda, alpha=0.3)
 plt.title("Scatter Plot: Scheduled Duration vs Arrival Delay")
 plt.xlabel("Scheduled Duration (minutes)")
 plt.ylabel("Arrival Delay (minutes)")
-plt.savefig(f"Outputs/scatter_crs_arrdelay.png", bbox_inches='tight')
+plt.savefig(f"OutputFiles/Python/preFeatureEngineering/scatter_crs_arrdelay.png", bbox_inches='tight')
 plt.close()
 
 print(f"EDA with original dataset done")
@@ -183,7 +181,7 @@ plt.title("PCA Projection of Flights")
 plt.xlabel("Principal Component 1")
 plt.ylabel("Principal Component 2")
 plt.legend(bbox_to_anchor=(1.05,1), loc='upper left')
-plt.savefig("Outputs/pca_projection.png", bbox_inches='tight')
+plt.savefig("OutputFiles/pca_projection.png", bbox_inches='tight')
 plt.close()
 
 print("Explained variance ratio:", pca.explained_variance_ratio_)
@@ -227,7 +225,7 @@ plt.title("UMAP Projection of Flights")
 plt.xlabel("UMAP 1")
 plt.ylabel("UMAP 2")
 plt.legend(bbox_to_anchor=(1.05,1), loc='upper left')
-plt.savefig("Outputs/umap_projection.png", bbox_inches='tight')
+plt.savefig("OutputFiles/umap_projection.png", bbox_inches='tight')
 plt.close()
 
 print("UMAP done... ")
@@ -487,4 +485,5 @@ plt.figure(figsize=(10,6))
 plt.barh(feature_importance['feature'].head(15)[::-1], feature_importance['importance'].head(15)[::-1])
 plt.xlabel("Importance")
 plt.title("Top 15 Features - Random Forest")
+plt.savefig(f"OutputFiles/top15features_for_pred.png", bbox_inches='tight')
 plt.show()

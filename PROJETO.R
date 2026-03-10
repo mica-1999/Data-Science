@@ -90,7 +90,7 @@ ggplot(top_airlines, aes(x = n, y = reorder(AIRLINE, n))) +
   geom_col(fill = "steelblue") +
   labs(title = "Top 10 Airlines by Number of Flights", x = "Count", y = "Airline") +
   theme_minimal()
-ggsave("Outputs/R_top10_airlines_count.png", width = 12, height = 6)
+ggsave("OutputFiles/R/preFeatureEngineering/top10_airlines_count.png", width = 12, height = 6)
 
 # Histograms + Density
 for(col in numeric_cols){
@@ -100,7 +100,7 @@ for(col in numeric_cols){
     labs(title = paste("Distribution of", col), x = col, y = "Count") +
     theme_minimal()
   
-  ggsave(paste0("Outputs/R_hist_", col, ".png"), plot = p, width = 8, height = 4)
+  ggsave(paste0("OutputFiles/R/preFeatureEngineering/hist_", col, ".png"), plot = p, width = 8, height = 4)
 }
 
 # Boxplot ARR_DELAY by airline
@@ -108,7 +108,7 @@ p <- ggplot(df_eda, aes(x = AIRLINE, y = ARR_DELAY)) +
   geom_boxplot(fill = "lightgreen", na.rm = TRUE) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(title = "Boxplot of Arrival Delay by Airline", x = "Airline", y = "Arrival Delay")
-ggsave("Outputs/R_boxplot_ARR_DELAY_by_airline.png", plot = p, width = 12, height = 6)
+ggsave("OutputFiles/R/preFeatureEngineering/boxplot_ARR_DELAY_by_airline.png", plot = p, width = 12, height = 6)
 
 # Correlation heatmap using tidyr instead of reshape2
 corr_matrix <- round(cor(df_eda[, numeric_cols], use = "complete.obs"), 2)
@@ -120,20 +120,20 @@ p <- ggplot(corr_melt, aes(Var1, Var2, fill = Freq)) +
   scale_fill_gradient2(low = "blue", high = "red", mid = "white", midpoint = 0) +
   labs(title = "Correlation Heatmap") +
   theme_minimal()
-ggsave("Outputs/R_corr_heatmap.png", plot = p, width = 6, height = 5)
+ggsave("OutputFiles/R/preFeatureEngineering/corr_heatmap.png", plot = p, width = 6, height = 5)
 
 # Scatter plots
 p <- ggplot(df_eda, aes(x = DISTANCE, y = ARR_DELAY)) +
   geom_point(alpha = 0.3, na.rm = TRUE) +
   labs(title = "Scatter Plot: Distance vs Arrival Delay", x = "Distance (miles)", y = "Arrival Delay (minutes)") +
   theme_minimal()
-ggsave("Outputs/R_scatter_distance_arrdelay.png", plot = p, width = 8, height = 6)
+ggsave("OutputFiles/R/preFeatureEngineering/scatter_distance_arrdelay.png", plot = p, width = 8, height = 6)
 
 p <- ggplot(df_eda, aes(x = CRS_ELAPSED_TIME, y = ARR_DELAY)) +
   geom_point(alpha = 0.3, na.rm = TRUE) +
   labs(title = "Scatter Plot: Scheduled Duration vs Arrival Delay", x = "Scheduled Duration (minutes)", y = "Arrival Delay (minutes)") +
   theme_minimal()
-ggsave("Outputs/R_scatter_crs_arrdelay.png", plot = p, width = 8, height = 6)
+ggsave("OutputFiles/R/preFeatureEngineering/scatter_crs_arrdelay.png", plot = p, width = 8, height = 6)
 
 cat("\nEDA with original dataset done\n")
 
