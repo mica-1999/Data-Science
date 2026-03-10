@@ -67,6 +67,31 @@ df_cleaned = df.copy()
 
 print(f"Processing done")
 
+#%% 1.1- Phase 2: Standardization for PCA / EDA
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+
+numeric_cols_pca = ['CRS_ELAPSED_TIME', 'DISTANCE']
+
+# Standardization
+standard_scaler = StandardScaler()
+df_scaled_std = pd.DataFrame(
+    standard_scaler.fit_transform(df_cleaned[numeric_cols_pca]),
+    columns=[f"{col}_std" for col in numeric_cols_pca]
+)
+
+# Normalization
+minmax_scaler = MinMaxScaler()
+df_scaled_minmax = pd.DataFrame(
+    minmax_scaler.fit_transform(df_cleaned[numeric_cols_pca]),
+    columns=[f"{col}_minmax" for col in numeric_cols_pca]
+)
+
+# Concatenate scaled data with df_cleaned if needed
+df = pd.concat([df_cleaned.reset_index(drop=True), df_scaled_std, df_scaled_minmax], axis=1)
+
+print(list(df.columns)) # Lista de colunas
+print("Standardization and normalization done.")
+
 #%% 2- Phase 2: Data Analysis and Cleansing / Exploratory Data Analysis (EDA)
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -174,21 +199,15 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Retirando as colunas não numéricas
-features_for_dr = df.drop(columns=['ARR_DELAY','CRS_DEP_TIME','dep_time_bin','flight_duration_bin',
-                                           'distance_bin','CRS_ELAPSED_TIME','DISTANCE',
-                                    'CRS_ELAPSED_TIME_minmax','DISTANCE_minmax','elapsed_x_distance',
-                                   'dep_hour_x_elapsed'],errors='ignore')
-print(list(features_for_dr.columns))
+print(list(df.columns))
+# Columns to include in PCA
+features_for_dr = df[['CRS_ELAPSED_TIME_std', 'DISTANCE_std']]
 
-# PCA (Principal Component Analysis)
-pca = PCA(n_components=2)  # reduzindo as novas colunas e conjunto de dados para 2 dimensões
+# PCA
+pca = PCA(n_components=2)
 pca_result = pca.fit_transform(features_for_dr)
-df_pca = pd.DataFrame(
-    pca_result,
-    columns=['PC1', 'PC2']
-)
-df_pca['AIRLINE'] = df_eda.loc[features_for_dr.index, 'AIRLINE'].values # adicionando as companhias para comparação
+df_pca = pd.DataFrame(pca_result, columns=['PC1', 'PC2'])
+df_pca['AIRLINE'] = df_eda.loc[features_for_dr.index, 'AIRLINE'].values
 
 # Scatterplot
 plt.figure(figsize=(14,6))
@@ -205,7 +224,7 @@ plt.title("PCA Projection of Flights")
 plt.xlabel("Principal Component 1")
 plt.ylabel("Principal Component 2")
 plt.legend(bbox_to_anchor=(1.05,1), loc='upper left')
-plt.savefig("../../OutputFiles/pca_projection.png", bbox_inches='tight')
+plt.savefig("OutputFiles/Python/preFeatureEngineering/pca_projection.png", bbox_inches='tight')
 plt.close()
 
 print("Explained variance ratio:", pca.explained_variance_ratio_)
@@ -360,27 +379,6 @@ df.drop(columns=['AIRLINE_CODE', 'ORIGIN', 'DEST'], inplace=True)
 #print("New dataset shape:", df.shape)
 #print(list(df.columns)) # Verifica-se se as colunas encoded foram adicionadas
 print("Done Encoding..")
-
-# Standardization/Normalization
-print("Standardizing/Normalizing...")
-standard_scaler = StandardScaler()
-standard_scaled = standard_scaler.fit_transform(df[numeric_cols_features])
-minmax_scaler = MinMaxScaler()
-minmax_scaled = minmax_scaler.fit_transform(df[numeric_cols_features])
-
-# Convert to DataFrame and add suffix "_std"
-df_standard_scaled = pd.DataFrame(
-    standard_scaled,
-    columns=[f"{col}_std" for col in numeric_cols_features]
-)
-# Convert to DataFrame and add suffix "_minmax"
-df_minmax_scaled = pd.DataFrame(
-    minmax_scaled,
-    columns=[f"{col}_minmax" for col in numeric_cols_features]
-)
-# Concatenate scaled columns with original DataFrame
-df = pd.concat([df, df_standard_scaled, df_minmax_scaled], axis=1)
-print("Done Standardizing/Normalizing..")
 
 # Binning
 # Divide CRS_DEP_TIME em 4 bins
