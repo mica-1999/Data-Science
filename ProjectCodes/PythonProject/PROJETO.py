@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 # Loading CSV
-df = pd.read_csv('datasets/flights_sample_3m.csv')
+df = pd.read_csv('ProjectDatasets/flights_sample_3m.csv')
 df_eda = df.copy()  # Pre pre-processing, guarda o original para a parte EDA
 
 # Prints
@@ -13,13 +13,14 @@ print("Starting pre-processing... ")
 #print(df.describe()) # Dados estatísticos sobre as colunas
 #print(df.isnull().sum()) # Verificando o nº de nulls nas colunas por linha
 #print("Dataset shape:", df.shape) # linhas x colunas nº
-print(list(df.columns)) # Lista de colunas
+#print(list(df.columns)) # Lista de colunas
 
 # Remover linhas desnecessárias/contêm null em colunas importantes
 df.dropna(subset=['CRS_ELAPSED_TIME'], inplace=True) # Apaga as linhas onde "CRS_ELAPSED_TIME" é null
 df = df[df['CANCELLED'] == 0] # Apenas removemos as linhas dos voos cancelados, podemos agora remover a coluna
 df = df[df['DIVERTED'] == 0] # Apenas removemos as linhas dos voos não rotados, podemos agora remover a coluna
 df = df.dropna(subset=['ARR_DELAY']) # Removemos as 2 linhas que tinham null em ARR_DELAY
+df = df[(df['DISTANCE'] >= 50) & (df['DISTANCE'] <= 5500)].reset_index(drop=True)
 
 df_hyp = df.copy() # Guardando para hyp
 
@@ -28,8 +29,8 @@ cols_to_drop = [
     'DEP_DELAY', 'DELAY_DUE_CARRIER', 'DELAY_DUE_WEATHER',
     'DELAY_DUE_NAS', 'DELAY_DUE_SECURITY', 'DELAY_DUE_LATE_AIRCRAFT',
     'ARR_TIME', 'DEP_TIME', 'WHEELS_OFF', 'WHEELS_ON',
-    'TAXI_OUT', 'TAXI_IN', 'ELAPSED_TIME', 'AIR_TIME','CANCELLED','CANCELLATION_CODE','DIVERTED','AIRLINE',
-    'AIRLINE_DOT','DOT_CODE','FL_NUMBER','ORIGIN_CITY','DEST_CITY','CRS_ARR_TIME'
+    'TAXI_OUT', 'TAXI_IN', 'ELAPSED_TIME', 'AIR_TIME','CANCELLED','CANCELLATION_CODE','DIVERTED',
+    'AIRLINE_DOT','DOT_CODE','FL_NUMBER','ORIGIN_CITY','DEST_CITY','AIRLINE'
 ]
 df.drop(columns=cols_to_drop, inplace=True)
 #print("New dataset shape:", df.shape) # Verificando se foram apagadas
@@ -37,9 +38,9 @@ print(df.isnull().sum()) # Verificar se o df ficou limpo.
 print(list(df.columns)) # Lista de colunas
 
 # Remover outliers usando IQR
-numeric_cols = ['CRS_ELAPSED_TIME','DISTANCE'] # Colunas que fazem sentido
-#print(df[numeric_cols].describe()) # Before handling
-for column_name in numeric_cols:
+numeric_cols_preproc = ['CRS_ELAPSED_TIME'] # Colunas que fazem sentido
+#print(df[numeric_cols_preproc].describe()) # Before handling
+for column_name in numeric_cols_preproc:
     Q1 = df[column_name].quantile(0.25)
     Q3 = df[column_name].quantile(0.75)
     IQR = Q3 - Q1
@@ -55,14 +56,14 @@ for column_name in numeric_cols:
     )
 
 # Preenchendo os nans com valores medianos
-for column_name in numeric_cols:
+for column_name in numeric_cols_preproc:
     df[column_name] = df[column_name].fillna(df[column_name].median())
 
 df = df.reset_index(drop=True) # Faz reset do index para resolver as linhas saltadas (quando foram removidas)
 
 # Guardando dataset pre-scaled/encoded só em caso
 df_cleaned = df.copy()
-#df.to_csv('datasets/flights_cleaned.csv', index=False)
+#df.to_csv('ProjectDatasets/flights_cleaned.csv', index=False)
 
 print(f"Processing done")
 
@@ -75,13 +76,13 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # Numeric columns for analysis
-numeric_cols = ['CRS_ELAPSED_TIME', 'DISTANCE', 'ARR_DELAY']
+numeric_cols_eda = ['CRS_ELAPSED_TIME', 'DISTANCE', 'ARR_DELAY']
 
 # Summary statistics with pandas
-print("\nBasic statistics:\n", df_eda[numeric_cols].describe())
-print("\nMedian values:\n", df_eda[numeric_cols].median())
-print("\nMean values:\n", df_eda[numeric_cols].mean())
-print("\nStandard deviation:\n", df_eda[numeric_cols].std())
+print("\nBasic statistics:\n", df_eda[numeric_cols_eda].describe())
+print("\nMedian values:\n", df_eda[numeric_cols_eda].median())
+print("\nMean values:\n", df_eda[numeric_cols_eda].mean())
+print("\nStandard deviation:\n", df_eda[numeric_cols_eda].std())
 
 # Data distribution analysis
 plt.figure(figsize=(12,6))
@@ -92,8 +93,23 @@ plt.ylabel("Airline")
 plt.savefig("OutputFiles/Python/preFeatureEngineering/top10_airlines_count.png", bbox_inches='tight')
 plt.close()
 
+numeric_cols_eda = [
+    'CRS_ELAPSED_TIME',  # scheduled flight time
+    'ELAPSED_TIME',      # actual flight time
+    'AIR_TIME',          # time in the air
+    'DISTANCE',          # distance between airports
+    'ARR_DELAY',         # arrival delay (target)
+    'DEP_DELAY',         # departure delay
+    'TAXI_OUT',          # time from gate to takeoff
+    'TAXI_IN',           # time from landing to gate
+    'DELAY_DUE_CARRIER', # delay caused by airline
+    'DELAY_DUE_WEATHER', # weather delays
+    'DELAY_DUE_NAS',     # national airspace system
+    'DELAY_DUE_LATE_AIRCRAFT'  # late aircraft cascading delays
+]
+
 # Histograms
-for col in numeric_cols:
+for col in numeric_cols_eda:
     plt.figure(figsize=(8,4))
     sns.histplot(df_eda[col], bins=50, kde=True)
     plt.title(f"Distribution of {col}")
@@ -109,7 +125,7 @@ for col in ['ARR_DELAY']:
     plt.close()
 
 # Correlation matrix & Heatmap
-corr_matrix = df_eda[numeric_cols].corr()
+corr_matrix = df_eda[numeric_cols_eda].corr()
 plt.figure(figsize=(6,5))
 sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
 plt.title("Correlation Heatmap")
@@ -181,7 +197,7 @@ plt.title("PCA Projection of Flights")
 plt.xlabel("Principal Component 1")
 plt.ylabel("Principal Component 2")
 plt.legend(bbox_to_anchor=(1.05,1), loc='upper left')
-plt.savefig("OutputFiles/pca_projection.png", bbox_inches='tight')
+plt.savefig("../../OutputFiles/pca_projection.png", bbox_inches='tight')
 plt.close()
 
 print("Explained variance ratio:", pca.explained_variance_ratio_)
@@ -225,7 +241,7 @@ plt.title("UMAP Projection of Flights")
 plt.xlabel("UMAP 1")
 plt.ylabel("UMAP 2")
 plt.legend(bbox_to_anchor=(1.05,1), loc='upper left')
-plt.savefig("OutputFiles/umap_projection.png", bbox_inches='tight')
+plt.savefig("../../OutputFiles/umap_projection.png", bbox_inches='tight')
 plt.close()
 
 print("UMAP done... ")
@@ -306,6 +322,7 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 # Categorical Encoding
 print("Encoding... ")
 categorical_cols = ['AIRLINE_CODE', 'ORIGIN', 'DEST'] # Unicos que fazem sentido dividir em categorias para o modelo
+numeric_cols_features = ['CRS_ELAPSED_TIME', 'DISTANCE']
 
 # Separa-se o OneHotEncoded e o Label Encode (mais valores e menos valores)
 print("Number of unique airlines:", df['AIRLINE_CODE'].nunique())
@@ -339,19 +356,19 @@ print("Done Encoding..")
 # Standardization/Normalization
 print("Standardizing/Normalizing...")
 standard_scaler = StandardScaler()
-standard_scaled = standard_scaler.fit_transform(df[numeric_cols])
+standard_scaled = standard_scaler.fit_transform(df[numeric_cols_features])
 minmax_scaler = MinMaxScaler()
-minmax_scaled = minmax_scaler.fit_transform(df[numeric_cols])
+minmax_scaled = minmax_scaler.fit_transform(df[numeric_cols_features])
 
 # Convert to DataFrame and add suffix "_std"
 df_standard_scaled = pd.DataFrame(
     standard_scaled,
-    columns=[f"{col}_std" for col in numeric_cols]
+    columns=[f"{col}_std" for col in numeric_cols_features]
 )
 # Convert to DataFrame and add suffix "_minmax"
 df_minmax_scaled = pd.DataFrame(
     minmax_scaled,
-    columns=[f"{col}_minmax" for col in numeric_cols]
+    columns=[f"{col}_minmax" for col in numeric_cols_features]
 )
 # Concatenate scaled columns with original DataFrame
 df = pd.concat([df, df_standard_scaled, df_minmax_scaled], axis=1)
@@ -397,7 +414,8 @@ df['IS_RUSH_HOUR'] = df['DEP_HOUR'].between(16, 20).astype(int)
 df.drop(columns=['FL_DATE'], inplace=True) # Remover pois já extraimos features boas
 
 print(df[['elapsed_x_distance', 'dep_hour_x_elapsed']].head())
-#df.to_csv('datasets/flights_cleaned_and_scaled.csv', index=False)
+print(list(df.columns)) # Lista de colunas
+#df.to_csv('ProjectDatasets/flights_cleaned_and_scaled.csv', index=False)
 
 #%% 8- Phase 3: Model Selection / Model Selection - Linear Regression Testing
 from sklearn.model_selection import train_test_split
@@ -485,5 +503,5 @@ plt.figure(figsize=(10,6))
 plt.barh(feature_importance['feature'].head(15)[::-1], feature_importance['importance'].head(15)[::-1])
 plt.xlabel("Importance")
 plt.title("Top 15 Features - Random Forest")
-plt.savefig(f"OutputFiles/top15features_for_pred.png", bbox_inches='tight')
+plt.savefig(f"../../OutputFiles/top15features_for_pred.png", bbox_inches='tight')
 plt.show()
