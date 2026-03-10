@@ -142,22 +142,30 @@ for col in ['ARR_DELAY']:
     plt.savefig(f"OutputFiles/Python/preFeatureEngineering/kde_{col}_by_airline.png", bbox_inches='tight')
     plt.close()
 
-# Scatter Plots ARR_DELAY VS DISTANCE E ARR_DELAY VS SCHEDULE_DURATION, CORRELAÇÃO DISTANCE-SCHEDULE
-plt.figure(figsize=(8,6))
-sns.scatterplot(x='DISTANCE', y='ARR_DELAY', data=df_eda, alpha=0.3)
-plt.title("Scatter Plot: Distance vs Arrival Delay")
-plt.xlabel("Distance (miles)")
-plt.ylabel("Arrival Delay (minutes)")
-plt.savefig(f"OutputFiles/Python/preFeatureEngineering/scatter_distance_arrdelay.png", bbox_inches='tight')
-plt.close()
+# Scatter Plots
+scatter_plots = [
+    ('DISTANCE', 'ARR_DELAY', "Distance vs Arrival Delay", "scatter_distance_arrdelay.png"),
+    ('CRS_ELAPSED_TIME', 'ARR_DELAY', "Scheduled Duration vs Arrival Delay", "scatter_crs_arrdelay.png"),
+    ('DEP_DELAY', 'ARR_DELAY', "Departure Delay vs Arrival Delay", "scatter_depdelay_arrdelay.png"),
+    ('TAXI_OUT', 'ARR_DELAY', "Taxi Out vs Arrival Delay", "scatter_taxiout_arrdelay.png"),
+    ('TAXI_IN', 'ARR_DELAY', "Taxi In vs Arrival Delay", "scatter_taxiin_arrdelay.png"),
+    ('AIR_TIME', 'ARR_DELAY', "Air Time vs Arrival Delay", "scatter_airtime_arrdelay.png"),
+    ('DISTANCE', 'CRS_ELAPSED_TIME', "Distance vs Scheduled Duration", "scatter_distance_crselapsed.png"),
+    ('DELAY_DUE_CARRIER', 'ARR_DELAY', "Carrier Delay vs Arrival Delay", "scatter_carrierdelay_arrdelay.png"),
+    ('DELAY_DUE_WEATHER', 'ARR_DELAY', "Weather Delay vs Arrival Delay", "scatter_weatherdelay_arrdelay.png"),
+    ('DELAY_DUE_NAS', 'ARR_DELAY', "NAS Delay vs Arrival Delay", "scatter_nasdelay_arrdelay.png"),
+    ('DELAY_DUE_LATE_AIRCRAFT', 'ARR_DELAY', "Late Aircraft Delay vs Arrival Delay", "scatter_lateaircraft_arrdelay.png")
+]
 
-plt.figure(figsize=(8,6))
-sns.scatterplot(x='CRS_ELAPSED_TIME', y='ARR_DELAY', data=df_eda, alpha=0.3)
-plt.title("Scatter Plot: Scheduled Duration vs Arrival Delay")
-plt.xlabel("Scheduled Duration (minutes)")
-plt.ylabel("Arrival Delay (minutes)")
-plt.savefig(f"OutputFiles/Python/preFeatureEngineering/scatter_crs_arrdelay.png", bbox_inches='tight')
-plt.close()
+# Loop through and generate each scatter plot
+for x_col, y_col, title, filename in scatter_plots:
+    plt.figure(figsize=(8,6))
+    sns.scatterplot(x=x_col, y=y_col, data=df_eda, alpha=0.3)
+    plt.title(f"Scatter Plot: {title}")
+    plt.xlabel(x_col)
+    plt.ylabel(y_col)
+    plt.savefig(f"OutputFiles/Python/preFeatureEngineering/{filename}", bbox_inches='tight')
+    plt.close()
 
 print(f"EDA with original dataset done")
 
