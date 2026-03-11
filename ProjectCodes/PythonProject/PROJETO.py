@@ -20,7 +20,7 @@ df.dropna(subset=['CRS_ELAPSED_TIME'], inplace=True) # Apaga as linhas onde "CRS
 df = df[df['CANCELLED'] == 0] # Apenas removemos as linhas dos voos cancelados, podemos agora remover a coluna
 df = df[df['DIVERTED'] == 0] # Apenas removemos as linhas dos voos não rotados, podemos agora remover a coluna
 df = df.dropna(subset=['ARR_DELAY']) # Removemos as 2 linhas que tinham null em ARR_DELAY
-df = df[(df['DISTANCE'] >= 50) & (df['DISTANCE'] <= 5500)].reset_index(drop=True)
+df = df[(df['DISTANCE'] >= 50) & (df['DISTANCE'] <= 5500)].reset_index(drop=True) # Removemos voos demasiado curtos ou demasiado longos para ser verdade
 
 df_hyp = df.copy() # Guardando para hyp
 
@@ -70,7 +70,9 @@ print(f"Processing done")
 #%% 1.1- Phase 2: Standardization for PCA / EDA
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
-numeric_cols_pca = ['CRS_ELAPSED_TIME', 'DISTANCE']
+
+print(list(df.columns)) # Lista de colunas
+numeric_cols_pca = ['CRS_ELAPSED_TIME', 'DISTANCE'] # Considerar CRS DEP AND CRS ARR talvez
 
 # Standardization
 standard_scaler = StandardScaler()
@@ -89,7 +91,8 @@ df_scaled_minmax = pd.DataFrame(
 # Concatenate scaled data with df_cleaned if needed
 df = pd.concat([df_cleaned.reset_index(drop=True), df_scaled_std, df_scaled_minmax], axis=1)
 
-print(list(df.columns)) # Lista de colunas
+print(df[['CRS_ELAPSED_TIME_std', 'DISTANCE_std',
+            'CRS_ELAPSED_TIME_minmax', 'DISTANCE_minmax']].head())
 print("Standardization and normalization done.")
 
 #%% 2- Phase 2: Data Analysis and Cleansing / Exploratory Data Analysis (EDA)
@@ -151,7 +154,7 @@ for col in ['ARR_DELAY']:
 
 # Correlation matrix & Heatmap
 corr_matrix = df_eda[numeric_cols_eda].corr()
-plt.figure(figsize=(6,5))
+plt.figure(figsize=(12,4))
 sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
 plt.title("Correlation Heatmap")
 plt.savefig("OutputFiles/Python/preFeatureEngineering/corr_heatmap.png", bbox_inches='tight')
