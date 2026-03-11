@@ -70,9 +70,7 @@ print(f"Processing done")
 #%% 1.1- Phase 2: Standardization for PCA / EDA
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
-
-print(list(df.columns)) # Lista de colunas
-numeric_cols_pca = ['CRS_ELAPSED_TIME', 'DISTANCE'] # Considerar CRS DEP AND CRS ARR talvez
+numeric_cols_pca = ['CRS_ELAPSED_TIME', 'DISTANCE', 'CRS_DEP_TIME', 'CRS_ARR_TIME']
 
 # Standardization
 standard_scaler = StandardScaler()
@@ -91,8 +89,8 @@ df_scaled_minmax = pd.DataFrame(
 # Concatenate scaled data with df_cleaned if needed
 df = pd.concat([df_cleaned.reset_index(drop=True), df_scaled_std, df_scaled_minmax], axis=1)
 
-print(df[['CRS_ELAPSED_TIME_std', 'DISTANCE_std',
-            'CRS_ELAPSED_TIME_minmax', 'DISTANCE_minmax']].head())
+print(df[[f"{col}_std" for col in numeric_cols_pca] +
+         [f"{col}_minmax" for col in numeric_cols_pca]].head())
 print("Standardization and normalization done.")
 
 #%% 2- Phase 2: Data Analysis and Cleansing / Exploratory Data Analysis (EDA)
@@ -204,7 +202,7 @@ import seaborn as sns
 
 print(list(df.columns))
 # Columns to include in PCA
-features_for_dr = df[['CRS_ELAPSED_TIME_std', 'DISTANCE_std']]
+features_for_dr = df[['CRS_ELAPSED_TIME_std', 'DISTANCE_std','CRS_DEP_TIME_std', 'CRS_ARR_TIME_std']]
 
 # PCA
 pca = PCA(n_components=2)
@@ -233,48 +231,53 @@ plt.close()
 print("Explained variance ratio:", pca.explained_variance_ratio_)
 print("Total variance explained:", sum(pca.explained_variance_ratio_))
 
-#%% 3b - Phase 2: Dimensionality Reduction / UMAP
+# %% 3b - Phase 2: Dimensionality Reduction / UMAP
 import umap
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+# Sample features for faster computation
+features_sample = features_for_dr.sample(200_000, random_state=42)
+airline_sample = df_eda.loc[features_sample.index, 'AIRLINE'].values
+
+# Initialize UMAP
 umap_reducer = umap.UMAP(
-    n_components=2,     # project down to 2D
-    n_neighbors=50,     # controls local vs global structure
-    min_dist=0.1,       # how tightly points are clustered
+    n_components=2,
+    n_neighbors=50,
+    min_dist=0.1,
     random_state=42
 )
 
-# Fit and transform (demora um pouco)
-print("Fitting")
-umap_result = umap_reducer.fit_transform(features_for_dr)
+# Fit and transform
+print("Fitting UMAP on sample...")
+umap_result = umap_reducer.fit_transform(features_sample)
 
 # Create DataFrame for plotting
-df_umap = pd.DataFrame(
-    umap_result,
-    columns=['UMAP1', 'UMAP2']
-)
-df_umap['AIRLINE'] = df_eda.loc[features_for_dr.index, 'AIRLINE'].values
+df_umap = pd.DataFrame(umap_result, columns=['UMAP1', 'UMAP2'])
+df_umap['AIRLINE'] = airline_sample
 
 # Plot UMAP projection
-print("Plotting")
-plt.figure(figsize=(14,6))
+print("Plotting...")
+plt.figure(figsize=(14, 6))
 sns.scatterplot(
-    data=df_umap.sample(200000, random_state=42),
+    data=df_umap,
     x='UMAP1',
     y='UMAP2',
     hue='AIRLINE',
     palette='tab20',
     alpha=0.5
 )
-plt.title("UMAP Projection of Flights")
+plt.title("UMAP Projection of Flights (Sample)")
 plt.xlabel("UMAP 1")
 plt.ylabel("UMAP 2")
-plt.legend(bbox_to_anchor=(1.05,1), loc='upper left')
-plt.savefig("../../OutputFiles/umap_projection.png", bbox_inches='tight')
+plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.savefig("OutputFiles/Python/preFeatureEngineering/umap_projection.png", bbox_inches='tight')
 plt.close()
 
-print("UMAP done... ")
+print("UMAP done...")
+
+# Quick check: airline cluster centers
+print(df_umap.groupby('AIRLINE')[['UMAP1', 'UMAP2']].mean())
 
 #%% 6- Phase 2:  Hypothesis Testing
 from scipy.stats import pearsonr, ttest_ind, f_oneway
