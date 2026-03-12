@@ -3,6 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.decomposition import PCA
+import umap
 
 class DimensionalityReducer:
     def __init__(self, df_scaled: pd.DataFrame, df_eda: pd.DataFrame, config: dict):
@@ -14,6 +15,11 @@ class DimensionalityReducer:
 
         self.features = config['dim_reduction']['features_for_dr']
         self.n_components = config['dim_reduction'].get('n_components', 2)
+
+        self.umap_sample_size = config['dim_reduction']['umap_sample_size']
+        self.umap_n_neighbors = config['dim_reduction']['umap_n_neighbors']
+        self.umap_min_dist = config['dim_reduction']['umap_min_dist']
+        self.umap_alpha = config['dim_reduction']['umap_alpha']
 
     def run_pca(self):
         """Run PCA and plot 2D projection."""
@@ -50,3 +56,48 @@ class DimensionalityReducer:
         print("Total variance explained:", sum(pca.explained_variance_ratio_))
 
         return df_pca, pca
+
+    def run_umap(self):
+        """Run UMAP on a sample of the data and plot 2D projection."""
+
+        # Sample features for faster computation
+        features_sample = self.df_scaled[self.features].sample(
+            min(self.umap_sample_size, len(self.df_scaled)), random_state=42
+        )
+        airline_sample = self.df_eda.loc[features_sample.index, 'AIRLINE'].values
+
+        # Initialize UMAP
+        umap_reducer = umap.UMAP(
+            n_components=2,
+            n_neighbors=self.umap_n_neighbors,
+            min_dist=self.umap_min_dist,
+            random_state=42
+        )
+
+        # Fit and transform
+        print("Fitting UMAP on sample...")
+        umap_result = umap_reducer.fit_transform(features_sample)
+
+        # Create DataFrame for plotting
+        df_umap = pd.DataFrame(umap_result, columns=['UMAP1', 'UMAP2'])
+        df_umap['AIRLINE'] = airline_sample
+
+        # Plot UMAP projection
+        print("Plotting UMAP projection...")
+        plt.figure(figsize=(14, 6))
+        sns.scatterplot(
+            data=df_umap,
+            x='UMAP1',
+            y='UMAP2',
+            hue='AIRLINE',
+            palette='tab20',
+            alpha=self.umap_alpha
+        )
+        plt.title("UMAP Projection of Flights (Sample)")
+        plt.xlabel("UMAP 1")
+        plt.ylabel("UMAP 2")
+        plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+        plt.savefig(os.path.join(self.output_dir, "umap_projection.png"), bbox_inches='tight')
+        plt.close()
+
+        print("UMAP done.")

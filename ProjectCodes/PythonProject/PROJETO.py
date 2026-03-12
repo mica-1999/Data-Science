@@ -351,7 +351,6 @@ else:
 
 #%% 7- Phase 3: Model Selection / New Features
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 # Categorical Encoding
 print("Encoding... ")

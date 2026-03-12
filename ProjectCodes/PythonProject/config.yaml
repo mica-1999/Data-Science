@@ -63,10 +63,14 @@ eda:
     - [DELAY_DUE_WEATHER, ARR_DELAY, "Weather Delay vs Arrival Delay", "scatter_weatherdelay_arrdelay.png"]
     - [DELAY_DUE_NAS, ARR_DELAY, "NAS Delay vs Arrival Delay", "scatter_nasdelay_arrdelay.png"]
     - [DELAY_DUE_LATE_AIRCRAFT, ARR_DELAY, "Late Aircraft Delay vs Arrival Delay", "scatter_lateaircraft_arrdelay.png"]
-  dim_reduction:
-    features_for_dr:
-      - CRS_ELAPSED_TIME_std
-      - DISTANCE_std
-      - CRS_DEP_TIME_std
-      - CRS_ARR_TIME_std
-    n_components: 2
+dim_reduction:
+  features_for_dr:
+    - CRS_ELAPSED_TIME_std
+    - DISTANCE_std
+    - CRS_DEP_TIME_std
+    - CRS_ARR_TIME_std
+  n_components: 2
+  umap_sample_size: 200000
+  umap_n_neighbors: 50
+  umap_min_dist: 0.1
+  umap_alpha: 0.5
