@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import yaml
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 # Load the YAML file
 with open("config.yaml", "r") as f:
@@ -8,11 +9,14 @@ with open("config.yaml", "r") as f:
 
 class DataPreprocessor:
     def __init__(self, config: dict):
+        self.config = config
         self.csv_path = config['preprocessing']['csv_path']
         self.min_distance = config['preprocessing']['distance_range']['min']
         self.max_distance = config['preprocessing']['distance_range']['max']
         self.future_columns = config['preprocessing']['future_columns']
         self.numeric_columns_for_outliers = config['preprocessing']['numeric_columns_for_outliers']
+        self.output_path_cleaned = config['preprocessing']['output_path_cleaned']
+        self.scaling_columns = config['preprocessing']['scaling_columns']
         self.df = None
         self.df_eda = None
         self.df_hyp = None
@@ -33,13 +37,12 @@ class DataPreprocessor:
         self.df = self.df[(self.df['DISTANCE'] >= self.min_distance) &
                           (self.df['DISTANCE'] <= self.max_distance)].reset_index(drop=True)
 
-        """ Copy for hypothesis testing """
+        # Copy for hypothesis testing
         self.df_hyp = self.df.copy()
 
     def drop_future_columns(self):
         """Drop columns that won't help for prediction (future info)."""
-        cols_to_drop = self.future_columns
-        self.df.drop(columns=cols_to_drop, inplace=True)
+        self.df.drop(columns=self.future_columns, inplace=True, errors="ignore")
 
     def handle_outliers(self, numeric_cols=None):
         """Remove outliers using IQR and fill NaNs with median."""
@@ -62,6 +65,32 @@ class DataPreprocessor:
             self.df_cleaned.to_csv(output_path, index=False)
             print(f"Cleaned dataset saved to {output_path}")
 
+    def apply_scaling(self):
+        """Apply standardization and normalization to selected numeric columns."""
+        numeric_cols = self.scaling_columns
+
+        # Standardization
+        standard_scaler = StandardScaler()
+        df_scaled_std = pd.DataFrame(
+            standard_scaler.fit_transform(self.df_cleaned[numeric_cols]),
+            columns=[f"{col}_std" for col in numeric_cols]
+        ).reset_index(drop=True)
+
+        # Normalization
+        minmax_scaler = MinMaxScaler()
+        df_scaled_minmax = pd.DataFrame(
+            minmax_scaler.fit_transform(self.df_cleaned[numeric_cols]),
+            columns=[f"{col}_minmax" for col in numeric_cols]
+        ).reset_index(drop=True)
+
+        # Combine with dataset
+        self.df = pd.concat(
+            [self.df_cleaned.reset_index(drop=True), df_scaled_std, df_scaled_minmax],
+            axis=1
+        )
+
+        print("Standardization and normalization done.")
+
     def preprocess(self):
         """Run all preprocessing steps in order."""
         print("Starting preprocessing...")
@@ -69,5 +98,7 @@ class DataPreprocessor:
         self.initial_cleaning()
         self.drop_future_columns()
         self.handle_outliers()
-        self.save_cleaned_copy(output_path=config['preprocessing']['output_path_cleaned'])
+        self.save_cleaned_copy(output_path=self.output_path_cleaned)
+        self.apply_scaling()
+
         print("Processing done. Final shape:", self.df.shape)

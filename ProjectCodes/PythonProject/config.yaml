@@ -1,5 +1,5 @@
 preprocessing:
-  csv_path: "ProjectDatasets/flights_sample_3m.csv"  # Path to CSV
+  csv_path: "../../ProjectDatasets/flights_sample_3m.csv"  # Path to CSV
   distance_range:
       min: 50
       max: 5500
@@ -29,4 +29,9 @@ preprocessing:
     - AIRLINE
   numeric_columns_for_outliers:
     - CRS_ELAPSED_TIME
-  output_path_cleaned: "ProjectDatasets/flights_cleaned.csv"
+  scaling_columns:
+    - CRS_ELAPSED_TIME
+    - DISTANCE
+    - CRS_DEP_TIME
+    - CRS_ARR_TIME
+  output_path_cleaned: "../../ProjectDatasets/flights_cleaned.csv"
