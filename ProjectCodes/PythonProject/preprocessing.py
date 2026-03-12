@@ -1,11 +1,6 @@
 import pandas as pd
 import numpy as np
-import yaml
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-
-# Load the YAML file
-with open("config.yaml", "r") as f:
-    config = yaml.safe_load(f)
 
 class DataPreprocessor:
     def __init__(self, config: dict):

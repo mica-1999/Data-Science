@@ -1,3 +1,4 @@
+output_dir: "../../OutputFiles/Python/preFeatureEngineering"
 preprocessing:
   csv_path: "../../ProjectDatasets/flights_sample_3m.csv"  # Path to CSV
   distance_range:
@@ -35,3 +36,37 @@ preprocessing:
     - CRS_DEP_TIME
     - CRS_ARR_TIME
   output_path_cleaned: "../../ProjectDatasets/flights_cleaned.csv"
+eda:
+  numeric_summary: [CRS_ELAPSED_TIME, DISTANCE, ARR_DELAY]
+  numeric_hist:
+    - CRS_ELAPSED_TIME
+    - ELAPSED_TIME
+    - AIR_TIME
+    - DISTANCE
+    - ARR_DELAY
+    - DEP_DELAY
+    - TAXI_OUT
+    - TAXI_IN
+    - DELAY_DUE_CARRIER
+    - DELAY_DUE_WEATHER
+    - DELAY_DUE_NAS
+    - DELAY_DUE_LATE_AIRCRAFT
+  scatter_plots:
+    - [DISTANCE, ARR_DELAY, "Distance vs Arrival Delay", "scatter_distance_arrdelay.png"]
+    - [CRS_ELAPSED_TIME, ARR_DELAY, "Scheduled Duration vs Arrival Delay", "scatter_crs_arrdelay.png"]
+    - [DEP_DELAY, ARR_DELAY, "Departure Delay vs Arrival Delay", "scatter_depdelay_arrdelay.png"]
+    - [TAXI_OUT, ARR_DELAY, "Taxi Out vs Arrival Delay", "scatter_taxiout_arrdelay.png"]
+    - [TAXI_IN, ARR_DELAY, "Taxi In vs Arrival Delay", "scatter_taxiin_arrdelay.png"]
+    - [AIR_TIME, ARR_DELAY, "Air Time vs Arrival Delay", "scatter_airtime_arrdelay.png"]
+    - [DISTANCE, CRS_ELAPSED_TIME, "Distance vs Scheduled Duration", "scatter_distance_crselapsed.png"]
+    - [DELAY_DUE_CARRIER, ARR_DELAY, "Carrier Delay vs Arrival Delay", "scatter_carrierdelay_arrdelay.png"]
+    - [DELAY_DUE_WEATHER, ARR_DELAY, "Weather Delay vs Arrival Delay", "scatter_weatherdelay_arrdelay.png"]
+    - [DELAY_DUE_NAS, ARR_DELAY, "NAS Delay vs Arrival Delay", "scatter_nasdelay_arrdelay.png"]
+    - [DELAY_DUE_LATE_AIRCRAFT, ARR_DELAY, "Late Aircraft Delay vs Arrival Delay", "scatter_lateaircraft_arrdelay.png"]
+  dim_reduction:
+    features_for_dr:
+      - CRS_ELAPSED_TIME_std
+      - DISTANCE_std
+      - CRS_DEP_TIME_std
+      - CRS_ARR_TIME_std
+    n_components: 2
