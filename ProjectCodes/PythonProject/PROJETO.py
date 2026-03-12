@@ -146,6 +146,7 @@ for col in numeric_cols_eda:
 for col in ['ARR_DELAY']:
     plt.figure(figsize=(12,6))
     sns.boxplot(x='AIRLINE', y=col, data=df_eda)
+    plt.ylim(-100, 100)
     plt.xticks(rotation=45)
     plt.savefig(f"OutputFiles/Python/preFeatureEngineering/boxplot_{col}_by_airline.png", bbox_inches='tight')
     plt.close()
