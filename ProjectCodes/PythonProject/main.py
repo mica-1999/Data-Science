@@ -53,7 +53,7 @@ def main():
             if preprocessor.df_eda is None:
                 print("⚠️ Please run preprocessing first! (Loads the Dataset)")
             else:
-                hyp = HypothesisTester(preprocessor.df_eda, config)
+                hyp = HypothesisTester(preprocessor.df_hyp, config)
                 hyp.run_all()
         elif choice == "5":
             if preprocessor.df is None:

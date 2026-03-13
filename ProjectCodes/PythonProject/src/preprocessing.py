@@ -22,7 +22,6 @@ class DataPreprocessor:
         """Load CSV and make a copy for EDA with error handling."""
         try:
             self.df = pd.read_csv(self.csv_path)
-            self.df_eda = self.df.copy()
         except FileNotFoundError:
             print(f"Error: CSV file not found at {self.csv_path}. Please check the path.")
         except Exception as e:
@@ -38,8 +37,9 @@ class DataPreprocessor:
         self.df = self.df[(self.df['DISTANCE'] >= self.min_distance) &
                           (self.df['DISTANCE'] <= self.max_distance)].reset_index(drop=True)
 
-        # Copy for hypothesis testing
+        # Copy for eda and hyp
         self.df_hyp = self.df.copy()
+        self.df_eda = self.df.copy() # Only moved here at end of project
 
     # -------------------- COL CLEANING --------------------
     def drop_future_columns(self):

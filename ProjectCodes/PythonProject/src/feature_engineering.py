@@ -15,7 +15,7 @@ class FeatureEngineer:
         for col in onehot_cols:
             encoder = OneHotEncoder(sparse_output=False)
             encoded = encoder.fit_transform(self.df[[col]])
-            encoded_df = pd.DataFrame(encoded, columns=encoder.get_feature_names_out([col]))
+            encoded_df = pd.DataFrame(encoded, columns=encoder.get_feature_names_out([col]),index=self.df.index)
 
             encoded_df.columns = [c.replace(col, f"encoded_{col.lower()}") for c in encoded_df.columns]
             self.df = pd.concat([self.df, encoded_df], axis=1)

@@ -91,7 +91,7 @@ class ModelTester:
         plt.xlabel("Importance")
         plt.title("Top Features - Random Forest")
         plt.savefig(self.rf_save_path, bbox_inches='tight')
-        plt.show()
+        plt.close()
         print(f"Feature importance plot saved to: {self.rf_save_path}")
 
         self.rf_model = rf

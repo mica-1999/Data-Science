@@ -12,7 +12,7 @@ class HypothesisTester:
         df = self.df_hyp.dropna(subset=['ARR_DELAY', 'DISTANCE'])
         corr, p = pearsonr(df['DISTANCE'], df['ARR_DELAY'])
         print("H1: Distance vs Arrival Delay")
-        print(f"Pearson correlation coefficient: {corr:.3f}, p-value: {p:.3f}")
+        print(f"Pearson correlation coefficient: {corr:.3f}, p-value: {p:.2e}")
         if p < 0.05:
             if abs(corr) < 0.05:
                 print("✅ Statistically significant but correlation is extremely weak; practically negligible.\n")
@@ -27,9 +27,9 @@ class HypothesisTester:
         airlines = self.config['hypothesis']['ttest_airlines']
         a = self.df_hyp.loc[self.df_hyp['AIRLINE'] == airlines[0], 'ARR_DELAY'].dropna()
         b = self.df_hyp.loc[self.df_hyp['AIRLINE'] == airlines[1], 'ARR_DELAY'].dropna()
-        t_stat, p = ttest_ind(a, b)
+        t_stat, p = ttest_ind(a, b, equal_var=False)
         print(f"H2: {airlines[0]} vs {airlines[1]} mean arrival delays")
-        print(f"T-statistic: {t_stat:.3f}, p-value: {p:.3f}")
+        print(f"T-statistic: {t_stat:.3f}, p-value: {p:.2e}")
         if p < 0.05:
             print(f"✅ Significant difference in mean delays between {airlines[0]} and {airlines[1]}.\n")
         else:
@@ -42,7 +42,7 @@ class HypothesisTester:
                   for a in self.df_hyp['AIRLINE'].unique()]
         f_stat, p = f_oneway(*groups)
         print("H3: ANOVA across all airlines")
-        print(f"F-statistic: {f_stat:.3f}, p-value: {p:.3f}")
+        print(f"F-statistic: {f_stat:.3f}, p-value: {p:.2e}")
         if p < 0.05:
             print("✅ Significant differences exist in delays between airlines.\n")
         else:
@@ -55,7 +55,7 @@ class HypothesisTester:
         df = self.df_hyp.dropna(subset=[weather_col, 'ARR_DELAY'])
         corr, p = pearsonr(df[weather_col], df['ARR_DELAY'])
         print(f"H4: {weather_col} vs Arrival Delay")
-        print(f"Pearson correlation coefficient: {corr:.3f}, p-value: {p:.3f}")
+        print(f"Pearson correlation coefficient: {corr:.3f}, p-value: {p:.2e}")
         if p < 0.05:
             print("✅ Weather-related delays significantly impact arrival delays.\n")
         else:
@@ -70,7 +70,7 @@ class HypothesisTester:
                        for h in sorted(df['DEP_HOUR'].unique())]
         f_stat, p = f_oneway(*hour_groups)
         print("H5: Departure Hour vs Arrival Delay")
-        print(f"F-statistic: {f_stat:.3f}, p-value: {p:.3f}")
+        print(f"F-statistic: {f_stat:.3f}, p-value: {p:.2e}")
         if p < 0.05:
             print("✅ Significant differences in mean arrival delays across departure hours.\n")
         else:

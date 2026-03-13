@@ -45,7 +45,7 @@ class DimensionalityReducer:
         df_pca['AIRLINE'] = self.df_eda.loc[features_for_dr.index, 'AIRLINE'].values
 
         # Scatterplot
-        print("Plotting PCA projection...")
+        print("Plotting PCA Scatter projection...")
         plt.figure(figsize=(14,6))
         sns.scatterplot(
             data=df_pca,
@@ -60,6 +60,22 @@ class DimensionalityReducer:
         plt.ylabel("Principal Component 2")
         plt.legend(bbox_to_anchor=(1.05,1), loc='upper left')
         plt.savefig(os.path.join(self.output_dir, "pca_projection.png"), bbox_inches='tight')
+        plt.close()
+
+        # Scree
+        print("Plotting PCA Scree plot...")
+        plt.figure(figsize=(6, 4))
+        plt.bar(
+            range(1, len(pca.explained_variance_ratio_) + 1),
+            pca.explained_variance_ratio_,
+            color='steelblue'
+        )
+        plt.xticks(range(1, len(pca.explained_variance_ratio_) + 1),
+                   [f'PC{i}' for i in range(1, len(pca.explained_variance_ratio_) + 1)])
+        plt.xlabel("Principal Component")
+        plt.ylabel("Explained Variance Ratio")
+        plt.title("PCA Scree Plot")
+        plt.savefig(os.path.join(self.output_dir, "pca_scree.png"), bbox_inches='tight')
         plt.close()
 
         # Print explained variance
