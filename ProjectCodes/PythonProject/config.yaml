@@ -1,6 +1,9 @@
 output_dir: "../../OutputFiles/Python/preFeatureEngineering"
+output_dataset:
+  cleaned: "../../ProjectDatasets/flights_cleaned.csv"
+  cleaned_scaled_new_features: "../../ProjectDatasets/flights_clean_scaled_featured.csv"
 preprocessing:
-  csv_path: "../../ProjectDatasets/flights_sample_3m.csv"  # Path to CSV
+  csv_path: "../../ProjectDatasets/flights_sample_3m.csv"
   distance_range:
       min: 50
       max: 5500
@@ -35,7 +38,6 @@ preprocessing:
     - DISTANCE
     - CRS_DEP_TIME
     - CRS_ARR_TIME
-  output_path_cleaned: "../../ProjectDatasets/flights_cleaned.csv"
 eda:
   numeric_summary: [CRS_ELAPSED_TIME, DISTANCE, ARR_DELAY]
   numeric_hist:
@@ -74,3 +76,25 @@ dim_reduction:
   umap_n_neighbors: 50
   umap_min_dist: 0.1
   umap_alpha: 0.5
+hypothesis:
+  ttest_airlines:
+    - "Southwest Airlines Co."
+    - "Delta Air Lines Inc."
+  weather_col: "DELAY_DUE_WEATHER"
+feature_engineering:
+  categorical:
+    onehot:
+      - AIRLINE_CODE
+    label:
+      - ORIGIN
+      - DEST
+  binning:
+    dep_hour:
+      bins: [0, 6, 12, 18, 24]
+      labels: ['Early Morning', 'Morning', 'Afternoon', 'Evening/Night']
+    elapsed_time:
+      bins: [0, 60, 120, 240, 1000]
+      labels: ['Short', 'Medium-Short', 'Medium-Long', 'Long']
+    distance:
+      bins: [0, 500, 1000, 2000, 5500]
+      labels: ['Short', 'Medium-Short', 'Medium-Long', 'Long']

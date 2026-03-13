@@ -21,6 +21,7 @@ class DimensionalityReducer:
         self.umap_min_dist = config['dim_reduction']['umap_min_dist']
         self.umap_alpha = config['dim_reduction']['umap_alpha']
 
+    # -------------------- PCA --------------------
     def run_pca(self):
         """Run PCA and plot 2D projection."""
         # Select features
@@ -57,6 +58,7 @@ class DimensionalityReducer:
 
         return df_pca, pca
 
+    # -------------------- UMAP --------------------
     def run_umap(self):
         """Run UMAP on a sample of the data and plot 2D projection."""
 

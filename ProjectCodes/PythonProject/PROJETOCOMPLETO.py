@@ -283,10 +283,6 @@ print(df_umap.groupby('AIRLINE')[['UMAP1', 'UMAP2']].mean())
 #%% 6- Phase 2:  Hypothesis Testing
 from scipy.stats import pearsonr, ttest_ind, f_oneway
 
-df_hyp = df_hyp.dropna(subset=['ARR_DELAY']) # remove as linhas que têm nans, no preprocessing não havia problem manter
-#print(df_hyp.isnull().sum())
-#print(list(df_hyp.columns)) # Lista de colunas
-
 # 1️⃣ Hypothesis 1: Correlation between flight distance and arrival delay
 print("Hypothesis 1: Distance vs Arrival Delay")
 corr_coeff, p_value = pearsonr(df_hyp['DISTANCE'], df_hyp['ARR_DELAY'])
@@ -404,8 +400,7 @@ print("Done Encoding..")
 
 # Binning
 # Divide CRS_DEP_TIME em 4 bins
-df['CRS_DEP_TIME'] = df['CRS_DEP_TIME'].astype(str).str.zfill(4)
-df['DEP_HOUR'] = df['CRS_DEP_TIME'].str[:2].astype(int)
+df['DEP_HOUR'] = df['CRS_DEP_TIME'] // 100
 hour_bins = [0, 6, 12, 18, 24]
 labels = ['Early Morning', 'Morning', 'Afternoon', 'Evening/Night']
 
@@ -441,7 +436,7 @@ df['IS_WEEKEND'] = df['DAY_OF_WEEK'].isin([5, 6]).astype(int)
 df['IS_RUSH_HOUR'] = df['DEP_HOUR'].between(16, 20).astype(int)
 df.drop(columns=['FL_DATE'], inplace=True) # Remover pois já extraimos features boas
 
-print(df[['elapsed_x_distance', 'dep_hour_x_elapsed']].head())
+print(df[['DEP_HOUR','elapsed_x_distance', 'dep_hour_x_elapsed']].head())
 print(list(df.columns)) # Lista de colunas
 #df.to_csv('ProjectDatasets/flights_cleaned_and_scaled.csv', index=False)
 

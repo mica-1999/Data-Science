@@ -16,6 +16,7 @@ class EDAAnalyzer:
         self.output_dir = config['output_dir']
         os.makedirs(self.output_dir, exist_ok=True)
 
+    # -------------------- BASIC SUMMARY STATS --------------------
     def summary_statistics(self):
         """Print basic stats, median, mean, std for numeric columns."""
         print("\nBasic statistics:\n", self.df[self.numeric_cols_summary].describe())
@@ -23,6 +24,7 @@ class EDAAnalyzer:
         print("\nMean values:\n", self.df[self.numeric_cols_summary].mean())
         print("\nStandard deviation:\n", self.df[self.numeric_cols_summary].std())
 
+    # -------------------- TOP AIRLINES --------------------
     def plot_top_airlines(self, top_n=10):
         """Count plot for top N airlines."""
         plt.figure(figsize=(12,6))
@@ -37,6 +39,7 @@ class EDAAnalyzer:
         plt.savefig(os.path.join(self.output_dir, "top_airlines_count.png"), bbox_inches='tight')
         plt.close()
 
+    # -------------------- HISTOGRAM PLOTS --------------------
     def plot_histograms(self):
         """Plot histograms for numeric columns."""
         for col in self.numeric_cols_hist:
@@ -46,6 +49,7 @@ class EDAAnalyzer:
             plt.savefig(os.path.join(self.output_dir, f"hist_{col}.png"), bbox_inches='tight')
             plt.close()
 
+    # -------------------- BOXPLOT --------------------
     def plot_boxplots_by_airline(self, target_cols=['ARR_DELAY']):
         """Boxplots of target columns by airline."""
         for col in target_cols:
@@ -56,6 +60,7 @@ class EDAAnalyzer:
             plt.savefig(os.path.join(self.output_dir, f"boxplot_{col}_by_airline.png"), bbox_inches='tight')
             plt.close()
 
+    # -------------------- FEATURES CORRELATION --------------------
     def plot_correlation_heatmap(self):
         """Correlation matrix & heatmap for numeric columns."""
         corr_matrix = self.df[self.numeric_cols_hist].corr()
@@ -65,6 +70,7 @@ class EDAAnalyzer:
         plt.savefig(os.path.join(self.output_dir, "corr_heatmap.png"), bbox_inches='tight')
         plt.close()
 
+    # -------------------- KDE PLOT --------------------
     def plot_kde_by_airline(self, target_cols=['ARR_DELAY']):
         """KDE plots of target columns per airline."""
         for col in target_cols:
@@ -76,6 +82,7 @@ class EDAAnalyzer:
             plt.savefig(os.path.join(self.output_dir, f"kde_{col}_by_airline.png"), bbox_inches='tight')
             plt.close()
 
+    # -------------------- SCATTER PLOTS --------------------
     def plot_scatter(self, scatter_configs=None):
         """Generate scatter plots as per config list."""
         if scatter_configs is None:
@@ -90,6 +97,7 @@ class EDAAnalyzer:
             plt.savefig(os.path.join(self.output_dir, filename), bbox_inches='tight')
             plt.close()
 
+    # -------------------- RUN ALL --------------------
     def run_all(self):
         """Run all EDA plots and stats."""
         self.summary_statistics()
