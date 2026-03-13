@@ -1,78 +1,155 @@
 # ✈️ Flight Delay and Cancellation Analysis (2019–2023)
 
-## **🗂️ Project Overview**
-This project analyzes commercial U.S. flights from 2019 to 2023 to understand patterns in flight delays and cancellations. The purpose is to perform **data preprocessing, exploratory analysis, hypothesis testing, and model selection** to predict arrival delays, classify delay types, and optionally cluster airports and airlines based on operational performance.
+## 🗂️ Project Overview
+This project analyzes commercial U.S. domestic flights from 2019 to 2023 to understand patterns in flight delays. The analysis covers **data preprocessing, exploratory data analysis, hypothesis testing, feature engineering, and model selection** to predict arrival delays, classify delay types, and identify operational patterns across airlines and airports.
 
-## **📄 Dataset Description**
-- **Source:** Kaggle – [Flight Delay and Cancellation Dataset](https://www.kaggle.com/datasets/patrickzel/flight-delay-and-cancellation-dataset-2019-2023/data)  
-- **Rows:** Each row represents a scheduled commercial flight  
-- **Columns:** Flight information, scheduled/actual times, delay metrics, flight duration, distance, status indicators, causes of delay  
-- **📝 Notes:**  
-  - Exclude cancelled/diverted flights from arrival delay prediction  
-  - Avoid using columns that could cause data leakage (actual times, delay due fields, etc.)  
-
-## **🎯 Project Objectives**
-- **Regression:** Predict arrival delay in minutes  
-- **Classification:** Predict delay category:  
-  - On-time (<15 min)  
-  - Short delay (15–30 min)  
-  - Long delay (>30 min)  
-- **Clustering (optional):** Identify patterns among airports or airlines  
-- **Hypothesis Testing:** Statistically assess factors affecting delays  
+The project is implemented in **both Python and R**, with a modular class-based Python pipeline and a Jupyter Notebook for visual analysis and reporting.
 
 ---
 
-## **Phase 1: Problem Formulation**
-- **📝 Problem Definition:**  
-  Clearly define the problem your analysis addresses and why it is important.  
-- **⚡ Goals and Objectives:**  
-  - Understand delay patterns and causes  
-  - Build predictive models for flight delays  
-  - Test hypotheses regarding airlines, weather, and other operational factors  
+## 📄 Dataset
+- **Source:** Kaggle – [Flight Delay and Cancellation Dataset (2019–2023)](https://www.kaggle.com/datasets/patrickzel/flight-delay-and-cancellation-dataset-2019-2023/data)
+- **Origin:** U.S. Department of Transportation On-Time Performance Reporting System
+- **Scale:** ~3 million flight records across 5 years
+- **Structure:** Each row represents a single scheduled commercial domestic flight
 
 ---
 
-## **Phase 2: Data Analysis and Cleansing**
-
-### **Step 2a: Preprocessing**
-- Describe the dataset in detail (number of rows, columns, types of features)  
-- Outline preprocessing steps taken  
-- Note handling of missing values, outliers, and normalization/standardization  
-
-### **Step 2b: Exploratory Data Analysis (EDA)**
-- 📊 Conduct descriptive statistics  
-- 📊 Generate visualizations to understand data distributions, correlations, and patterns  
-- 📊 Apply dimension reduction techniques (at least one linear, e.g., PCA, and one non-linear, e.g., UMAP)  
-- Summarize initial insights gained from EDA  
-
-### **Step 2c: Hypothesis Testing**
-- Formulate null and alternative hypotheses  
-- Select appropriate statistical tests  
-- Conduct tests and interpret the results  
+## 🎯 Project Objectives
+- **Regression:** Predict arrival delay duration in minutes using only pre-departure information
+- **Classification:** Categorize flights into:
+  - ✅ On-time (< 15 min delay)
+  - ⏱️ Short delay (15–30 min)
+  - ⏳ Long delay (> 30 min)
+- **Clustering:** Identify operational patterns across airlines and airports based on delay behavior
+- **Hypothesis Testing:** Statistically assess factors influencing flight delays
 
 ---
 
-## **Phase 3: Model Selection**
+## 📁 Project Structure
 
-### **Step 3a: Feature Engineering**
-- Create at least 10 new features  
-- Describe reasoning behind each derived feature  
-
-### **Step 3b: Candidate Models**
-- List potential models suitable for regression, classification, or clustering tasks  
-- Discuss the rationale for each choice  
-
-### **Step 3c: Model Validation**
-- Select appropriate validation method(s) (e.g., train/test split, cross-validation)  
-- Describe evaluation metrics for model performance  
-
-### **Step 3d: Justification**
-- Explain all decisions regarding feature selection, models, and validation methods  
+```
+project/
+│
+├── ProjectDatasets/
+│   ├── flights_sample_3m.csv                  # Raw dataset (3M rows)
+│   ├── flights_cleaned.csv                    # Cleaned dataset (post-preprocessing)
+│   └── flights_clean_scaled_featured.csv      # Cleaned + scaled + feature engineered
+│
+├── OutputFiles/
+│   ├── Python/
+│   │   ├── preFeatureEngineering/             # EDA, PCA, UMAP plots
+│   │   └── postFeatureEngineering/            # Feature importance plots
+│
+├── ProjectCodes/
+│   └── PythonProject/
+│       └── src/
+│           ├── preprocessing.py               # DataPreprocessor class
+│           ├── eda.py                         # EDAAnalyzer class
+│           ├── pca_umap.py                    # DimensionalityReducer class
+│           ├── hypothesis.py                  # HypothesisTester class
+│           ├── feature_engineering.py         # FeatureEngineer class
+│           └── model.py                       # ModelTester class
+│
+├── config.yaml                                # Pipeline configuration
+├── main.py                                    # Interactive pipeline entry point
+└── notebook.ipynb                             # Jupyter Notebook report
+```
 
 ---
 
-## **📚 References**
-- Flight Delay and Cancellation Dataset, Kaggle: [Link](https://www.kaggle.com/datasets/patrickzel/flight-delay-and-cancellation-dataset-2019-2023/data)  
-- U.S. Department of Transportation On-Time Performance Reporting System  
+## ⚙️ Pipeline — How to Run
+
+The Python pipeline is menu-driven. Run `main.py` and select steps interactively:
+
+```bash
+python main.py
+```
+
+```
+1: Run Preprocessing
+2: Run EDA
+3: Run PCA/UMAP
+4: Run Hypothesis Testing
+5: Run Feature Engineering
+6: Run Modeling
+0: Exit
+```
+
+> ⚠️ Steps must be run in order — preprocessing must be completed before any other step.
 
 ---
+
+## 🔧 Configuration
+
+All pipeline parameters are controlled via `config.yaml`:
+- Dataset paths and output directories
+- Distance filtering range
+- Columns to drop (leakage prevention)
+- Columns for outlier handling and scaling
+- EDA plot configurations
+- Dimensionality reduction parameters (PCA/UMAP)
+- Hypothesis testing settings
+- Feature engineering binning and encoding settings
+- Modeling hyperparameters
+
+---
+
+## 📊 What Was Done — Part 1 Summary
+
+### Phase 1 — Problem Formulation
+- Defined the regression, classification, and clustering tasks
+- Specified success criteria and data leakage prevention strategy
+
+### Phase 2 — Data Analysis & Cleansing
+
+**Preprocessing:**
+- Removed cancelled and diverted flights
+- Dropped rows with missing `ARR_DELAY` or `CRS_ELAPSED_TIME`
+- Filtered invalid distances (< 50 or > 5500 miles)
+- Removed outliers using IQR method on `CRS_ELAPSED_TIME`
+- Dropped all post-event and leakage columns
+- Applied StandardScaler and MinMaxScaler to key numeric features
+
+**EDA:**
+- Descriptive statistics for key numeric features
+- Histograms, boxplots, KDE plots, and scatter plots
+- Correlation heatmap across numeric features
+- PCA (linear) and UMAP (non-linear) dimensionality reduction
+
+**Hypothesis Testing (5 hypotheses):**
+- H1: Pearson correlation — flight distance vs arrival delay
+- H2: Welch's t-test — Southwest vs Delta mean delays
+- H3: ANOVA — mean delays across all airlines
+- H4: Pearson correlation — weather delays vs arrival delay
+- H5: ANOVA — departure hour vs arrival delay
+
+### Phase 3 — Model Selection
+
+**Feature Engineering (13+ new features):**
+- One-Hot Encoding: `AIRLINE_CODE`
+- Label Encoding: `ORIGIN`, `DEST`
+- Binning: departure hour, flight duration, distance
+- Interaction features: `elapsed_x_distance`, `dep_hour_x_elapsed`
+- Time features: `DAY_OF_WEEK`, `MONTH`, `IS_WEEKEND`, `IS_RUSH_HOUR`
+
+**Models Evaluated:**
+
+| Model | MAE | RMSE | R² |
+|---|---|---|---|
+| Linear Regression | 23.741 | 51.188 | 0.013 |
+| Random Forest | 23.485 | 51.164 | 0.013 |
+
+> Both models show limited predictive performance, expected given the strict exclusion of post-event variables to prevent data leakage. The models represent a realistic pre-departure prediction scenario.
+
+---
+
+## 🔒 Data Leakage Prevention
+The following columns were excluded from all predictive models as they contain post-event information:
+`DEP_DELAY`, `ARR_TIME`, `DEP_TIME`, `WHEELS_OFF`, `WHEELS_ON`, `TAXI_OUT`, `TAXI_IN`, `ELAPSED_TIME`, `AIR_TIME`, `DELAY_DUE_CARRIER`, `DELAY_DUE_WEATHER`, `DELAY_DUE_NAS`, `DELAY_DUE_SECURITY`, `DELAY_DUE_LATE_AIRCRAFT`
+
+---
+
+## 📚 References
+- Flight Delay and Cancellation Dataset — Kaggle: [Link](https://www.kaggle.com/datasets/patrickzel/flight-delay-and-cancellation-dataset-2019-2023/data)
+- U.S. Department of Transportation On-Time Performance Reporting System
