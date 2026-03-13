@@ -7,7 +7,7 @@ from ProjectCodes.PythonProject.src.feature_engineering import FeatureEngineer
 from ProjectCodes.PythonProject.src.model import ModelTester
 
 # Load config
-with open("config.yaml", "r") as f:
+with open("../config.yaml", "r") as f:
     config = yaml.safe_load(f)
 
 def main():

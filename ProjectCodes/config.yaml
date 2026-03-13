@@ -1,7 +1,10 @@
 output_dir: "../../OutputFiles/Python/preFeatureEngineering"
+output_dir_r: "../../OutputFiles/R/preFeatureEngineering"
 output_dataset:
   cleaned: "../../ProjectDatasets/flights_cleaned.csv"
   cleaned_scaled_new_features: "../../ProjectDatasets/flights_clean_scaled_featured.csv"
+  cleaned_r: "../../ProjectDatasets/flights_cleaned_r.csv"
+  cleaned_scaled_new_features_r: "../../ProjectDatasets/flights_clean_scaled_featured_r.csv"
 preprocessing:
   csv_path: "../../ProjectDatasets/flights_sample_3m.csv"
   distance_range:
