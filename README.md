@@ -40,20 +40,22 @@ project/
 │   ├── Python/
 │   │   ├── preFeatureEngineering/             # EDA, PCA, UMAP plots
 │   │   └── postFeatureEngineering/            # Feature importance plots
+│   └── R/
+│       └── preFeatureEngineering/             # R EDA, PCA, UMAP plots
 │
 ├── ProjectCodes/
-│   └── PythonProject/
-│       └── src/
-│           ├── preprocessing.py               # DataPreprocessor class
-│           ├── eda.py                         # EDAAnalyzer class
-│           ├── pca_umap.py                    # DimensionalityReducer class
-│           ├── hypothesis.py                  # HypothesisTester class
-│           ├── feature_engineering.py         # FeatureEngineer class
-│           └── model.py                       # ModelTester class
-│
-├── config.yaml                                # Pipeline configuration
-├── main.py                                    # Interactive pipeline entry point
-└── notebook.ipynb                             # Jupyter Notebook report
+│   ├── PythonProject/
+│   │   ├── src/
+│   │   │   ├── preprocessing.py               # DataPreprocessor class
+│   │   │   ├── eda.py                         # EDAAnalyzer class
+│   │   │   ├── pca_umap.py                    # DimensionalityReducer class
+│   │   │   ├── hypothesis.py                  # HypothesisTester class
+│   │   │   ├── feature_engineering.py         # FeatureEngineer class
+│   │   │   └── model.py                       # ModelTester class
+│   │   ├── config.yaml                        # Pipeline configuration
+│   │   ├── main.py                            # Interactive pipeline entry point
+│   │   └── ProjetoCDJupyter.ipynb             # Jupyter Notebook report
+│   └── RProject/                              # R implementation
 ```
 
 ---
