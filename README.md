@@ -32,30 +32,41 @@ The project is implemented in **both Python and R**, with a modular class-based 
 project/
 │
 ├── ProjectDatasets/
-│   ├── flights_sample_3m.csv                  # Raw dataset (3M rows)
-│   ├── flights_cleaned.csv                    # Cleaned dataset (post-preprocessing)
-│   └── flights_clean_scaled_featured.csv      # Cleaned + scaled + feature engineered
+│   ├── flights_sample_3m.csv                    # Raw dataset (3M rows)
+│   ├── flights_cleaned.csv                      # Cleaned dataset (post-preprocessing) Python
+│   ├── flights_clean_scaled_featured.csv        # Cleaned + scaled + featured Python
+│   ├── flights_cleaned_r.csv                    # Cleaned dataset (post-preprocessing) R
+│   └── flights_clean_scaled_featured_r.csv      # Cleaned + scaled + featured R
 │
 ├── OutputFiles/
 │   ├── Python/
-│   │   ├── preFeatureEngineering/             # EDA, PCA, UMAP plots
-│   │   └── postFeatureEngineering/            # Feature importance plots
+│   │   ├── preFeatureEngineering/               # EDA, PCA, UMAP plots
+│   │   └── postFeatureEngineering/              # Feature importance plots
 │   └── R/
-│       └── preFeatureEngineering/             # R EDA, PCA, UMAP plots
+│       ├── preFeatureEngineering/               # R EDA, PCA, UMAP plots
+│       └── postFeatureEngineering/              # R Feature importance plots
 │
 ├── ProjectCodes/
+│   ├── config.yaml                              # Shared pipeline configuration
 │   ├── PythonProject/
 │   │   ├── src/
-│   │   │   ├── preprocessing.py               # DataPreprocessor class
-│   │   │   ├── eda.py                         # EDAAnalyzer class
-│   │   │   ├── pca_umap.py                    # DimensionalityReducer class
-│   │   │   ├── hypothesis.py                  # HypothesisTester class
-│   │   │   ├── feature_engineering.py         # FeatureEngineer class
-│   │   │   └── model.py                       # ModelTester class
-│   │   ├── config.yaml                        # Pipeline configuration
-│   │   ├── main.py                            # Interactive pipeline entry point
-│   │   └── ProjetoCDJupyter.ipynb             # Jupyter Notebook report
-│   └── RProject/                              # R implementation
+│   │   │   ├── preprocessing.py                 # DataPreprocessor class
+│   │   │   ├── eda.py                           # EDAAnalyzer class
+│   │   │   ├── pca_umap.py                      # DimensionalityReducer class
+│   │   │   ├── hypothesis.py                    # HypothesisTester class
+│   │   │   ├── feature_engineering.py           # FeatureEngineer class
+│   │   │   └── model.py                         # ModelTester class
+│   │   ├── main.py                              # Interactive pipeline entry point
+│   │   └── ProjetoCDJupyter.ipynb               # Jupyter Notebook report
+│   └── RProject/
+│       ├── src/
+│       │   ├── preprocessing.R                  # DataPreprocessor R6 class
+│       │   ├── eda.R                            # EDAAnalyzer R6 class
+│       │   ├── pca_umap.R                       # DimensionalityReducer R6 class
+│       │   ├── hypothesis.R                     # HypothesisTester R6 class
+│       │   ├── feature_engineering.R            # FeatureEngineer R6 class
+│       │   └── model.R                          # ModelTester R6 class
+│       └── main.R                               # Interactive pipeline entry point
 ```
 
 ---
