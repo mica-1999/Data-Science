@@ -48,6 +48,7 @@ DataPreprocessor <- R6Class("DataPreprocessor",
         filter(CANCELLED == 0) %>%
         filter(DIVERTED == 0) %>%
         filter(!is.na(ARR_DELAY)) %>%
+        mutate(ARR_DELAY = pmax(ARR_DELAY, 0)) %>%
         filter(DISTANCE >= self$min_distance & DISTANCE <= self$max_distance)
 
       # Reset index (row names) 

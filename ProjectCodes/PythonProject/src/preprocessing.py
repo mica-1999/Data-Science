@@ -34,6 +34,7 @@ class DataPreprocessor:
         self.df = self.df[self.df['CANCELLED'] == 0]
         self.df = self.df[self.df['DIVERTED'] == 0]
         self.df = self.df.dropna(subset=['ARR_DELAY'])
+        self.df['ARR_DELAY'] = self.df['ARR_DELAY'].clip(lower=0) # Indicado pelo Prof via Discord (On time = Equally as successfully)
         self.df = self.df[(self.df['DISTANCE'] >= self.min_distance) &
                           (self.df['DISTANCE'] <= self.max_distance)].reset_index(drop=True)
 
