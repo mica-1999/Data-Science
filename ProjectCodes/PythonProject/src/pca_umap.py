@@ -4,6 +4,13 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.decomposition import PCA
 import umap
+import warnings
+
+# Suppress specific UMAP warning
+warnings.filterwarnings(
+    "ignore",
+    message="n_jobs value 1 overridden to 1 by setting random_state"
+)
 
 class DimensionalityReducer:
     def __init__(self, df_scaled: pd.DataFrame, df_eda: pd.DataFrame, config: dict):
@@ -24,6 +31,8 @@ class DimensionalityReducer:
     # -------------------- PCA --------------------
     def run_pca(self):
         """Run PCA and plot 2D projection."""
+        print("\n" + "=" * 20 + " PCA " + "=" * 20)
+
         # Select features
         features_for_dr = self.df_scaled[self.features]
 
@@ -36,6 +45,7 @@ class DimensionalityReducer:
         df_pca['AIRLINE'] = self.df_eda.loc[features_for_dr.index, 'AIRLINE'].values
 
         # Scatterplot
+        print("Plotting PCA projection...")
         plt.figure(figsize=(14,6))
         sns.scatterplot(
             data=df_pca,
@@ -61,6 +71,7 @@ class DimensionalityReducer:
     # -------------------- UMAP --------------------
     def run_umap(self):
         """Run UMAP on a sample of the data and plot 2D projection."""
+        print("\n" + "=" * 20 + " UMAP " + "=" * 20)
 
         # Sample features for faster computation
         features_sample = self.df_scaled[self.features].sample(
@@ -77,7 +88,6 @@ class DimensionalityReducer:
         )
 
         # Fit and transform
-        print("Fitting UMAP on sample...")
         umap_result = umap_reducer.fit_transform(features_sample)
 
         # Create DataFrame for plotting
@@ -102,4 +112,5 @@ class DimensionalityReducer:
         plt.savefig(os.path.join(self.output_dir, "umap_projection.png"), bbox_inches='tight')
         plt.close()
 
-        print("UMAP done.")
+        print(f"UMAP completed. Sample of first 5 rows of embedding:\n{umap_result[:5]}")
+        print("🎉 Both Processes Done. All outputs saved to:", self.output_dir)

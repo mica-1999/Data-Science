@@ -98,3 +98,23 @@ feature_engineering:
     distance:
       bins: [0, 500, 1000, 2000, 5500]
       labels: ['Short', 'Medium-Short', 'Medium-Long', 'Long']
+modeling:
+  target_col: ARR_DELAY
+  test_size: 0.2
+  random_state: 42
+  drop_columns:
+    - ARR_DELAY
+    - CRS_DEP_TIME
+    - dep_time_bin
+    - flight_duration_bin
+    - distance_bin
+    - CRS_ELAPSED_TIME_minmax
+    - DISTANCE_minmax
+    - CRS_ELAPSED_TIME_std
+    - DISTANCE_std
+  linear_regression: {}
+  random_forest:
+    n_estimators: 200
+    max_depth: 15
+    plot_top_features: 15
+    save_feature_importance_path: "../../OutputFiles/Python/postFeatureEngineering/top15features_for_pred.png"

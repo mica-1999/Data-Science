@@ -20,9 +20,6 @@ class EDAAnalyzer:
     def summary_statistics(self):
         """Print basic stats, median, mean, std for numeric columns."""
         print("\nBasic statistics:\n", self.df[self.numeric_cols_summary].describe())
-        print("\nMedian values:\n", self.df[self.numeric_cols_summary].median())
-        print("\nMean values:\n", self.df[self.numeric_cols_summary].mean())
-        print("\nStandard deviation:\n", self.df[self.numeric_cols_summary].std())
 
     # -------------------- TOP AIRLINES --------------------
     def plot_top_airlines(self, top_n=10):
@@ -99,12 +96,28 @@ class EDAAnalyzer:
 
     # -------------------- RUN ALL --------------------
     def run_all(self):
-        """Run all EDA plots and stats."""
+        """Run all EDA plots and stats with clear prints for each step."""
+        print("\n" + "=" * 20 + " EDA STEP " + "=" * 20)
+
+        print("\n1️⃣  Computing summary statistics...")
         self.summary_statistics()
+
+        print("2️⃣  Plotting top airlines by flight count...")
         self.plot_top_airlines()
+
+        print("3️⃣  Plotting histograms for numeric columns...")
         self.plot_histograms()
+
+        print("4️⃣  Plotting boxplots of ARR_DELAY by airline...")
         self.plot_boxplots_by_airline()
+
+        print("5️⃣  Plotting correlation heatmap for numeric features...")
         self.plot_correlation_heatmap()
+
+        print("6️⃣  Plotting KDE of ARR_DELAY by airline...")
         self.plot_kde_by_airline()
+
+        print("7️⃣  Generating scatter plots as per config...")
         self.plot_scatter()
-        print("EDA complete. All plots saved.")
+
+        print("🎉 EDA complete. All outputs saved to:", self.output_dir)

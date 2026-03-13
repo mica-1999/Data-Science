@@ -344,23 +344,6 @@ if p_value < 0.05:
 else:
     print("❌ No significant differences in mean arrival delays across departure hours.\n")
 
-# 7️⃣ Hypothesis 6: Interaction Between Flight Distance and Weather Delays
-
-# Remove rows with missing weather delay data
-df_weather = df_hyp.dropna(subset=['DELAY_DUE_WEATHER'])
-
-# Overall correlation between weather delays and arrival delays
-corr_coeff, p_value = pearsonr(df_weather['DELAY_DUE_WEATHER'], df_weather['ARR_DELAY'])
-
-print("Bonus Hypothesis 6: Weather Delay vs Arrival Delay")
-print(f"Pearson correlation coefficient: {corr_coeff:.3f}")
-print(f"P-value: {p_value:.3f}")
-
-if p_value < 0.05:
-    print("✅ Weather-related delays significantly impact arrival delays.\n")
-else:
-    print("❌ Weather-related delays do not significantly impact arrival delays.\n")
-
 #%% 7- Phase 3: Model Selection / New Features
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 

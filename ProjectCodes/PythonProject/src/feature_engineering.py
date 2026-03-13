@@ -9,7 +9,6 @@ class FeatureEngineer:
     # -------------------- CATEGORICAL ENCODING --------------------
     def encode_categorical(self):
         """Encode categorical columns: OneHot for few unique, LabelEncode for many unique."""
-        print("Encoding categorical features...")
 
         # OneHotEncoding for airlines
         onehot_cols = self.config['feature_engineering']['categorical']['onehot']
@@ -29,7 +28,8 @@ class FeatureEngineer:
             self.df[f"{col}_label"] = le.fit_transform(self.df[col])
             self.df.drop(columns=[col], inplace=True)
 
-        print("Encoding done.")
+        print(f"One-hot columns encoded: {self.config['feature_engineering']['categorical']['onehot']}")
+        print(f"Label-encoded columns: {self.config['feature_engineering']['categorical']['label']}")
 
     # -------------------- BINNING --------------------
     def apply_binning(self):
@@ -51,14 +51,16 @@ class FeatureEngineer:
         dist_labels = self.config['feature_engineering']['binning']['distance']['labels']
         self.df['distance_bin'] = pd.cut(self.df['DISTANCE'], bins=dist_bins, labels=dist_labels, include_lowest=True)
 
-        print("Binning done.")
+        print(f"Departure hour bins: {self.config['feature_engineering']['binning']['dep_hour']['labels']}")
+        print(f"Flight duration bins: {self.config['feature_engineering']['binning']['elapsed_time']['labels']}")
+        print(f"Distance bins: {self.config['feature_engineering']['binning']['distance']['labels']}")
 
     # -------------------- INTERACTION FEATURES --------------------
     def add_interactions(self):
         """Create interaction features for modeling."""
         self.df['elapsed_x_distance'] = self.df['CRS_ELAPSED_TIME'] * self.df['DISTANCE']
         self.df['dep_hour_x_elapsed'] = self.df['DEP_HOUR'] * self.df['CRS_ELAPSED_TIME']
-        print("Interaction features added.")
+        print("Interaction features added: ['elapsed_x_distance', 'dep_hour_x_elapsed']")
 
     # -------------------- TIME FEATURES --------------------
     def add_time_features(self):
@@ -69,17 +71,20 @@ class FeatureEngineer:
         self.df['IS_WEEKEND'] = self.df['DAY_OF_WEEK'].isin([5,6]).astype(int)
         self.df['IS_RUSH_HOUR'] = self.df['DEP_HOUR'].between(16, 20).astype(int)
         self.df.drop(columns=['FL_DATE'], inplace=True)
-        print("Time features added.")
+        print("Time-based features added: ['DAY_OF_WEEK', 'MONTH', 'IS_WEEKEND', 'IS_RUSH_HOUR']")
 
     # -------------------- RUN ALL --------------------
     def run_all(self):
         """Run all feature engineering steps in order."""
+        print("\n" + "=" * 20 + " FEATURE ENGINEERING " + "=" * 20)
         self.encode_categorical()
         self.apply_binning()
         self.add_interactions()
         self.add_time_features()
-        print("Feature engineering complete.")
-
         self.df.to_csv(self.config['output_dataset']['cleaned_scaled_new_features'], index=False)
-        print(f"✅ Dataset saved to {self.config['output_dataset']['cleaned_scaled_new_features']}")
+
+        print(f"✅ Dataset saved to: {self.config['output_dataset']['cleaned_scaled_new_features']}")
+        print("Feature engineering complete. Preview of dataset:")
+        print(self.df.head())
+
         return self.df

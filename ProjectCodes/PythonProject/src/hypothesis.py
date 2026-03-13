@@ -76,25 +76,11 @@ class HypothesisTester:
         else:
             print("❌ No significant differences in mean arrival delays across departure hours.\n")
 
-    # -------------------- HYP 6 --------------------
-    def run_h6_weather_vs_arrival(self):
-        """Hypothesis 6: Weather delay vs Arrival Delay"""
-        weather_col = self.config['hypothesis']['weather_col']
-        df = self.df_hyp.dropna(subset=[weather_col, 'ARR_DELAY'])
-
-        corr, p = pearsonr(df[weather_col], df['ARR_DELAY'])
-        print(f"H6 {weather_col} vs Arrival Delay: r={corr:.3f}, p={p:.3f}")
-
-        if p < 0.05:
-            print("✅ Weather-related delays significantly impact arrival delays.\n")
-        else:
-            print("❌ Weather-related delays do not significantly impact arrival delays.\n")
-
     # -------------------- RUN ALL --------------------
     def run_all(self):
+        print("\n" + "=" * 20 + " HYPOTHESIS TESTING " + "=" * 20)
         self.run_h1_distance_vs_delay()
         self.run_h2_airline_ttest()
         self.run_h3_airline_anova()
         self.run_h4_weather_vs_delay()
         self.run_h5_dep_hour_anova()
-        self.run_h6_weather_vs_arrival()

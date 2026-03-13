@@ -19,10 +19,14 @@ class DataPreprocessor:
 
     # -------------------- LOAD DATA --------------------
     def load_data(self):
-        """Load CSV and make a copy for EDA."""
-        self.df = pd.read_csv(self.csv_path)
-        self.df_eda = self.df.copy()
-        print("Data loaded. Shape:", self.df.shape)
+        """Load CSV and make a copy for EDA with error handling."""
+        try:
+            self.df = pd.read_csv(self.csv_path)
+            self.df_eda = self.df.copy()
+        except FileNotFoundError:
+            print(f"Error: CSV file not found at {self.csv_path}. Please check the path.")
+        except Exception as e:
+            print(f"An unexpected error occurred while loading the CSV: {e}")
 
     # -------------------- ROW CLEANING --------------------
     def initial_cleaning(self):
@@ -63,7 +67,6 @@ class DataPreprocessor:
         self.df_cleaned = self.df.copy()
         if output_path is not None:
             self.df_cleaned.to_csv(output_path, index=False)
-            print(f"Cleaned dataset saved to {output_path}")
 
     # -------------------- SCALING FOR PCA/UMAP --------------------
     def apply_scaling(self):
@@ -95,12 +98,26 @@ class DataPreprocessor:
     # -------------------- RUN PREPROCESSING --------------------
     def preprocess(self):
         """Run all preprocessing steps in order."""
-        print("Starting preprocessing...")
-        self.load_data()
-        self.initial_cleaning()
-        self.drop_future_columns()
-        self.handle_outliers()
-        self.save_cleaned_copy(output_path=self.output_path_cleaned)
-        self.apply_scaling()
+        print("\n" + "="*20 + " PREPROCESSING " + "="*20)
 
-        print("Processing done. Final shape:", self.df.shape)
+        self.load_data()
+        print(f"Data loaded from: {self.config['preprocessing']['csv_path']}")
+        print(f"Original dataset shape: {self.df.shape}")
+
+        self.initial_cleaning()
+        print(f"After cleaning (nulls, cancelled/diverted, distance filter): {self.df.shape}")
+
+        self.drop_future_columns()
+        print(f"Columns dropped (future info): {self.future_columns}")
+
+        self.handle_outliers()
+        print(f"Outliers handled for columns: {self.numeric_columns_for_outliers}")
+
+        self.save_cleaned_copy(output_path=self.output_path_cleaned)
+        print(f"Cleaned dataset saved to: {self.output_path_cleaned}")
+
+        self.apply_scaling()
+        print(f"Scaling applied on columns: {self.scaling_columns}")
+
+        print("Preview of cleaned dataset:")
+        print(self.df.head())
