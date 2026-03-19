@@ -1,5 +1,6 @@
 output_dir: "../../OutputFiles/Python/preFeatureEngineering"
 output_dir_r: "../../OutputFiles/R/preFeatureEngineering"
+output_dir_post_fe: "../../OutputFiles/Python/postFeatureEngineering"
 output_dataset:
   cleaned: "../../ProjectDatasets/flights_cleaned.csv"
   cleaned_scaled_new_features: "../../ProjectDatasets/flights_clean_scaled_featured.csv"
@@ -101,6 +102,27 @@ feature_engineering:
     distance:
       bins: [0, 500, 1000, 2000, 5500]
       labels: ['Short', 'Medium-Short', 'Medium-Long', 'Long']
+eda_post_engineering:
+  numeric_hist:
+    - DAY_OF_WEEK
+    - MONTH
+    - IS_WEEKEND
+    - IS_RUSH_HOUR
+    - DEP_HOUR
+    - elapsed_x_distance
+    - dep_hour_x_elapsed
+  correlation_cols:
+    - DAY_OF_WEEK
+    - MONTH
+    - IS_WEEKEND
+    - IS_RUSH_HOUR
+    - DEP_HOUR
+    - elapsed_x_distance
+    - dep_hour_x_elapsed
+    - ARR_DELAY
+  boxplot:
+    - IS_WEEKEND
+    - IS_RUSH_HOUR
 modeling:
   target_col: ARR_DELAY
   test_size: 0.2

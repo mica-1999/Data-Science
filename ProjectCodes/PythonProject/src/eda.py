@@ -16,6 +16,12 @@ class EDAAnalyzer:
         self.output_dir = config['output_dir']
         os.makedirs(self.output_dir, exist_ok=True)
 
+        self.post_fe_hist_cols = config['eda_post_engineering']['numeric_hist']
+        self.post_fe_corr_cols = config['eda_post_engineering']['correlation_cols']
+        self.post_fe_boxplot_cols = config['eda_post_engineering']['boxplot']
+        self.output_dir_post_fe = config['output_dir_post_fe']
+        os.makedirs(self.output_dir_post_fe, exist_ok=True)
+
     # -------------------- BASIC SUMMARY STATS --------------------
     def summary_statistics(self):
         """Print basic stats, median, mean, std for numeric columns."""
@@ -93,6 +99,63 @@ class EDAAnalyzer:
             plt.ylabel(y_col)
             plt.savefig(os.path.join(self.output_dir, filename), bbox_inches='tight')
             plt.close()
+
+    # -------------------- POST FEATURE ENGINEERING EDA --------------------
+    def plot_post_fe_histograms(self):
+        """Plot histograms for engineered feature columns."""
+        for col in self.post_fe_hist_cols:
+            if col not in self.df.columns:
+                print(f"⚠️  Column '{col}' not found in dataset, skipping...")
+                continue
+            plt.figure(figsize=(8, 4))
+            sns.histplot(self.df[col], bins=30, kde=True)
+            plt.title(f"Distribution of {col} (Engineered)")
+            plt.xlabel(col)
+            plt.ylabel("Count")
+            plt.savefig(os.path.join(self.output_dir_post_fe, f"hist_eng_{col}.png"), bbox_inches='tight')
+            plt.close()
+
+    def plot_post_fe_correlation_heatmap(self):
+        """Correlation heatmap for engineered features vs ARR_DELAY."""
+        valid_cols = [c for c in self.post_fe_corr_cols if c in self.df.columns]
+        if not valid_cols:
+            print("⚠️  No valid columns found for post-FE correlation heatmap, skipping...")
+            return
+        corr_matrix = self.df[valid_cols].corr()
+        plt.figure(figsize=(12, 6))
+        sns.heatmap(corr_matrix, annot=True, cmap='coolwarm')
+        plt.title("Correlation Heatmap - Engineered Features")
+        plt.savefig(os.path.join(self.output_dir_post_fe, "corr_heatmap_engineered.png"), bbox_inches='tight')
+        plt.close()
+
+    def plot_post_fe_boxplots(self):
+        """Boxplots of ARR_DELAY grouped by key engineered binary/categorical features."""
+        for col in self.post_fe_boxplot_cols:
+            if col not in self.df.columns or 'ARR_DELAY' not in self.df.columns:
+                print(f"⚠️  Column '{col}' or 'ARR_DELAY' not found, skipping boxplot...")
+                continue
+            plt.figure(figsize=(8, 5))
+            sns.boxplot(x=col, y='ARR_DELAY', data=self.df)
+            plt.title(f"ARR_DELAY by {col}")
+            plt.xlabel(col)
+            plt.ylabel("Arrival Delay (min)")
+            plt.savefig(os.path.join(self.output_dir_post_fe, f"boxplot_arrdelay_by_{col}.png"), bbox_inches='tight')
+            plt.close()
+
+    def run_post_engineering(self):
+        """Run EDA on engineered features after feature engineering step."""
+        print("\n" + "=" * 20 + " POST-ENGINEERING EDA " + "=" * 20)
+
+        print("\n1️⃣  Plotting histograms for engineered features...")
+        self.plot_post_fe_histograms()
+
+        print("2️⃣  Plotting correlation heatmap for engineered features...")
+        self.plot_post_fe_correlation_heatmap()
+
+        print("3️⃣  Plotting ARR_DELAY boxplots by engineered categorical features...")
+        self.plot_post_fe_boxplots()
+
+        print("🎉 Post-engineering EDA complete. All outputs saved to:", self.output_dir_post_fe)
 
     # -------------------- RUN ALL --------------------
     def run_all(self):

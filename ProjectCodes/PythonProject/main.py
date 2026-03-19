@@ -20,7 +20,8 @@ def main():
         "3": "Run PCA/UMAP",
         "4": "Run Hypothesis Testing",
         "5": "Run Feature Engineering",
-        "6": "Run Modeling",
+        "6": "Run Post-Engineering EDA",
+        "7": "Run Modeling",
         "0": "Exit"
     }
 
@@ -63,7 +64,13 @@ def main():
                 df_final = fe.run_all()
         elif choice == "6":
             if df_final is None:
-                print("⚠️ Please run Feature Engineering first!")
+                print("⚠️ Please run Feature Engineering first! (Step 5)")
+            else:
+                eda_post = EDAAnalyzer(df_final, config)
+                eda_post.run_post_engineering()
+        elif choice == "7":
+            if df_final is None:
+                print("⚠️ Please run Feature Engineering first! (Step 5)")
             else:
                 model_tester = ModelTester(df_final, config=config)
                 model_tester.prepare_data()
