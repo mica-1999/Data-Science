@@ -48,6 +48,7 @@ project/
 │
 ├── ProjectCodes/
 │   ├── config.yaml                              # Shared pipeline configuration
+│   ├── ProjetoCDJupyter.ipynb                   # Jupyter Notebook report
 │   ├── PythonProject/
 │   │   ├── src/
 │   │   │   ├── preprocessing.py                 # DataPreprocessor class
@@ -56,8 +57,7 @@ project/
 │   │   │   ├── hypothesis.py                    # HypothesisTester class
 │   │   │   ├── feature_engineering.py           # FeatureEngineer class
 │   │   │   └── model.py                         # ModelTester class
-│   │   ├── main.py                              # Interactive pipeline entry point
-│   │   └── ProjetoCDJupyter.ipynb               # Jupyter Notebook report
+│   │   └── main.py                              # Interactive pipeline entry point
 │   └── RProject/
 │       ├── src/
 │       │   ├── preprocessing.R                  # DataPreprocessor R6 class
@@ -67,6 +67,9 @@ project/
 │       │   ├── feature_engineering.R            # FeatureEngineer R6 class
 │       │   └── model.R                          # ModelTester R6 class
 │       └── main.R                               # Interactive pipeline entry point
+│
+└── ProjectReport/
+    └── Report.pdf                               # Mid-journey report (Part 1)
 ```
 
 ---
