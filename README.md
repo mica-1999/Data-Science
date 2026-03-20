@@ -13,7 +13,8 @@ The project is implemented in **both Python and R**, with a modular class-based 
 - **Scale:** ~3 million flight records across 5 years
 - **Structure:** Each row represents a single scheduled commercial domestic flight
 
-Place the CSV file in the `ProjectDatasets/` folder as `flights_sample_3m.csv`
+> ⚠️ **The dataset is not included in this repository due to its size.**
+> Download it from the link above and place the CSV file in the `ProjectDatasets/` folder as `flights_sample_3m.csv`.
 ---
 
 ## 🎯 Project Objectives
