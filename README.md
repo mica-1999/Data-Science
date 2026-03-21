@@ -155,8 +155,8 @@ All pipeline parameters are controlled via `config.yaml`:
 
 | Model | MAE | RMSE | R² |
 |---|---|---|---|
-| Linear Regression | 23.741 | 51.188 | 0.013 |
-| Random Forest | 23.485 | 51.164 | 0.013 |
+| Linear Regression | 19.474 | 47.859 | 0.011 |
+| Random Forest | 19.239 | 47.945 | 0.007 |
 
 > Both models show limited predictive performance, expected given the strict exclusion of post-event variables to prevent data leakage. The models represent a realistic pre-departure prediction scenario.
 
