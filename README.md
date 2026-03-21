@@ -83,18 +83,20 @@ The Python pipeline is menu-driven. Run `main.py` and select steps interactively
 ```bash
 python main.py
 ```
-
 ```
 1: Run Preprocessing
 2: Run EDA
 3: Run PCA/UMAP
 4: Run Hypothesis Testing
 5: Run Feature Engineering
-6: Run Modeling
+6: Run Post-Engineering EDA
+7: Run Modeling
 0: Exit
 ```
 
 > ⚠️ Steps must be run in order — preprocessing must be completed before any other step.
+
+> 📝 **Note:** The R pipeline follows the same steps but does not include the Post-Engineering EDA step due to time constraints.
 
 ---
 
