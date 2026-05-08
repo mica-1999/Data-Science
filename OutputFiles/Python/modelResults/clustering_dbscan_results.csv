@@ -1,0 +1,2 @@
+Algorithm,eps,min_samples,Clusters Found,Noise Points,Noise Ratio
+DBSCAN,0.8,15,7,2979,0.02979

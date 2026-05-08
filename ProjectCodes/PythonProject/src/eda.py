@@ -1,3 +1,5 @@
+#%% Phase 2: Data Analysis and Cleansing / Exploratory Data Analysis (EDA)
+
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt

@@ -8,6 +8,8 @@ from ProjectCodes.PythonProject.src.model import ModelTester
 from ProjectCodes.PythonProject.src.kNN import KNNRunner
 from ProjectCodes.PythonProject.src.supervised_learning import SupervisedLearningRunner
 from ProjectCodes.PythonProject.src.ensemble_learning import EnsembleLearningRunner
+from ProjectCodes.PythonProject.src.deep_learning import DeepLearningRunner
+from ProjectCodes.PythonProject.src.clustering import ClusteringRunner
 
 # Load config
 with open("../config.yaml", "r") as f:
@@ -24,10 +26,12 @@ def main():
         "4": "Run Hypothesis Testing",
         "5": "Run Feature Engineering",
         "6": "Run Post-Engineering EDA",
-        "7": "Run Modeling (Phase 1 - Linear Regression + Random Forest)",
+        "7": "Run Baseline Modeling (Linear Regression)",
         "8": "Run kNN from Scratch (Phase 2)",
         "9": "Run Supervised Learning Models (Decision Tree + SVR)",
         "10": "Run Ensemble Learning (Random Forest + Gradient Boosting)",
+        "11": "Run Deep Learning Model",
+        "12": "Run Clustering Analysis",
         "0": "Exit"
     }
 
@@ -99,6 +103,18 @@ def main():
             else:
                 ensemble_runner = EnsembleLearningRunner(df_final, config=config)
                 ensemble_runner.run_all()
+        elif choice == "11":
+            if df_final is None:
+                print("⚠️ Please run Feature Engineering first! (Step 5)")
+            else:
+                dl_runner = DeepLearningRunner(df_final, config=config)
+                dl_runner.run_all()
+        elif choice == "12":
+            if df_final is None:
+                print("⚠️ Please run Feature Engineering first! (Step 5)")
+            else:
+                clustering_runner = ClusteringRunner(df_final, config=config)
+                clustering_runner.run_all()
         else:
             print("Invalid choice. Please try again.")
 

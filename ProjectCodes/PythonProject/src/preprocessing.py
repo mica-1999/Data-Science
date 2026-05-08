@@ -1,3 +1,5 @@
+#%% Phase 2: Data Analysis and Cleansing / Preprocessing
+
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
@@ -43,7 +45,7 @@ class DataPreprocessor:
         self.df_eda = self.df.copy() # Only moved here at end of project
 
     # -------------------- COL CLEANING --------------------
-    def drop_future_columns(self):
+    def drop_leakage_columns(self):
         """Drop columns that won't help for prediction (future info)."""
         self.df.drop(columns=self.future_columns, inplace=True, errors="ignore")
 
@@ -108,7 +110,7 @@ class DataPreprocessor:
         self.initial_cleaning()
         print(f"After cleaning (nulls, cancelled/diverted, distance filter): {self.df.shape}")
 
-        self.drop_future_columns()
+        self.drop_leakage_columns()
         print(f"Columns dropped (future info): {self.future_columns}")
 
         self.handle_outliers()

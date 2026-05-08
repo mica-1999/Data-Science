@@ -1,4 +1,4 @@
-#%% Phase 4: Ensemble Learning Models
+#%% Phase 4: Model Building / Ensemble Learning Models
 
 import os
 import pandas as pd
@@ -19,39 +19,43 @@ class EnsembleLearningRunner:
         2. Boosting method -> Gradient Boosting Regressor
 
     Both models are evaluated using regression metrics:
-        - MAE  : Mean Absolute Error
-        - RMSE : Root Mean Squared Error
-        - R2   : Coefficient of determination
+        - MAE
+        - RMSE
+        - R2
     """
 
     def __init__(self, df: pd.DataFrame, config: dict):
         self.df = df.copy()
         self.config = config
 
-        # General modeling config
-        self.target_col = config['modeling']['target_col']
-        self.test_size = config['modeling']['test_size']
-        self.random_state = config['modeling']['random_state']
-        self.drop_cols = config['modeling']['drop_columns']
+        self.target_col = config["modeling"]["target_col"]
+        self.test_size = config["modeling"]["test_size"]
+        self.random_state = config["modeling"]["random_state"]
+        self.drop_cols = config["modeling"]["drop_columns"]
 
-        # Output directory
-        self.output_dir = config.get('output_dir_ensemble', config.get('output_dir_post_fe', '../outputs/ensemble_learning'))
-        os.makedirs(self.output_dir, exist_ok=True)
+        self.output_dir_results = config["output_dir_model_results"]
+        self.output_dir_graphics = config["output_dir_model_graphics"]
 
-        # Random Forest parameters. Reuse old modeling config if available.
-        rf_cfg = config.get('ensemble_learning', {}).get('random_forest', config.get('modeling', {}).get('random_forest', {}))
-        self.rf_n_estimators = rf_cfg.get('n_estimators', 100)
-        self.rf_max_depth = rf_cfg.get('max_depth', 15)
-        self.rf_min_samples_leaf = rf_cfg.get('min_samples_leaf', 20)
-        self.rf_plot_top = rf_cfg.get('plot_top_features', 10)
+        os.makedirs(self.output_dir_results, exist_ok=True)
+        os.makedirs(self.output_dir_graphics, exist_ok=True)
 
-        # Gradient Boosting parameters
-        gb_cfg = config.get('ensemble_learning', {}).get('gradient_boosting', {})
-        self.gb_n_estimators = gb_cfg.get('n_estimators', 150)
-        self.gb_learning_rate = gb_cfg.get('learning_rate', 0.05)
-        self.gb_max_depth = gb_cfg.get('max_depth', 3)
-        self.gb_min_samples_leaf = gb_cfg.get('min_samples_leaf', 30)
-        self.gb_plot_top = gb_cfg.get('plot_top_features', 10)
+        rf_cfg = config.get("ensemble_learning", {}).get(
+            "random_forest",
+            config.get("modeling", {}).get("random_forest", {})
+        )
+
+        self.rf_n_estimators = rf_cfg.get("n_estimators", 100)
+        self.rf_max_depth = rf_cfg.get("max_depth", 15)
+        self.rf_min_samples_leaf = rf_cfg.get("min_samples_leaf", 20)
+        self.rf_plot_top = rf_cfg.get("plot_top_features", 10)
+
+        gb_cfg = config.get("ensemble_learning", {}).get("gradient_boosting", {})
+
+        self.gb_n_estimators = gb_cfg.get("n_estimators", 150)
+        self.gb_learning_rate = gb_cfg.get("learning_rate", 0.05)
+        self.gb_max_depth = gb_cfg.get("max_depth", 3)
+        self.gb_min_samples_leaf = gb_cfg.get("min_samples_leaf", 30)
+        self.gb_plot_top = gb_cfg.get("plot_top_features", 10)
 
         self.results = []
 
@@ -59,13 +63,10 @@ class EnsembleLearningRunner:
     def prepare_data(self):
         """Prepare X/y and split the data into train/test sets."""
 
-        X = self.df.drop(columns=self.drop_cols, errors='ignore')
+        X = self.df.drop(columns=self.drop_cols, errors="ignore")
         y = self.df[self.target_col]
 
-        # Keep only numeric columns. Tree ensembles need encoded numeric input.
         X = X.select_dtypes(include=[np.number])
-
-        # Fill remaining missing values with the median of each column.
         X = X.fillna(X.median())
 
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
@@ -76,11 +77,12 @@ class EnsembleLearningRunner:
         )
 
         self.X = X
+
         print(f"Train: {self.X_train.shape} | Test: {self.X_test.shape}")
 
         return self.X_train, self.X_test, self.y_train, self.y_test
 
-    # -------------------- METRICS --------------------
+    # -------------------- EVALUATE REGRESSION --------------------
     def _evaluate_regression(self, model_name: str, y_pred: np.ndarray):
         """Calculate and print regression metrics."""
 
@@ -94,33 +96,40 @@ class EnsembleLearningRunner:
         print(f"R2  : {r2:.3f}")
 
         result = {
-            'Model': model_name,
-            'MAE': mae,
-            'RMSE': rmse,
-            'R2': r2
+            "Model": model_name,
+            "MAE": mae,
+            "RMSE": rmse,
+            "R2": r2
         }
+
         self.results.append(result)
+
         return result
 
-    # -------------------- PLOTS --------------------
+    # -------------------- PLOT ACTUAL VS PREDICTED --------------------
     def _plot_actual_vs_predicted(self, y_pred: np.ndarray, model_name: str, filename: str):
         """Plot actual ARR_DELAY values against predicted values."""
 
         plt.figure(figsize=(7, 5))
         plt.scatter(self.y_test, y_pred, alpha=0.25)
+
         plt.xlabel("Actual ARR_DELAY")
         plt.ylabel("Predicted ARR_DELAY")
         plt.title(f"{model_name}: Actual vs Predicted")
 
         min_val = min(self.y_test.min(), y_pred.min())
         max_val = max(self.y_test.max(), y_pred.max())
-        plt.plot([min_val, max_val], [min_val, max_val], linestyle='--')
 
-        save_path = os.path.join(self.output_dir, filename)
-        plt.savefig(save_path, bbox_inches='tight')
+        plt.plot([min_val, max_val], [min_val, max_val], linestyle="--")
+
+        save_path = os.path.join(self.output_dir_graphics, filename)
+
+        plt.savefig(save_path, bbox_inches="tight")
         plt.close()
-        print(f"Plot saved: {save_path}")
 
+        print(f"Actual vs predicted plot saved: {save_path}")
+
+    # -------------------- PLOT RESIDUALS --------------------
     def _plot_residuals(self, y_pred: np.ndarray, model_name: str, filename: str):
         """Plot residual distribution: actual - predicted."""
 
@@ -128,24 +137,35 @@ class EnsembleLearningRunner:
 
         plt.figure(figsize=(8, 5))
         plt.hist(residuals, bins=50)
+
         plt.xlabel("Residuals (Actual - Predicted)")
         plt.ylabel("Frequency")
         plt.title(f"{model_name}: Residual Distribution")
 
-        save_path = os.path.join(self.output_dir, filename)
-        plt.savefig(save_path, bbox_inches='tight')
+        save_path = os.path.join(self.output_dir_graphics, filename)
+
+        plt.savefig(save_path, bbox_inches="tight")
         plt.close()
+
         print(f"Residual plot saved: {save_path}")
 
-    def _save_feature_importance(self, model, model_name: str, filename_csv: str, filename_plot: str, top_n: int):
+    # -------------------- SAVE FEATURE IMPORTANCE --------------------
+    def _save_feature_importance(
+        self,
+        model,
+        model_name: str,
+        filename_csv: str,
+        filename_plot: str,
+        top_n: int
+    ):
         """Save and plot feature importance for tree-based ensemble models."""
 
         feature_importance = pd.DataFrame({
-            'feature': self.X.columns,
-            'importance': model.feature_importances_
-        }).sort_values(by='importance', ascending=False)
+            "feature": self.X.columns,
+            "importance": model.feature_importances_
+        }).sort_values(by="importance", ascending=False)
 
-        csv_path = os.path.join(self.output_dir, filename_csv)
+        csv_path = os.path.join(self.output_dir_results, filename_csv)
         feature_importance.to_csv(csv_path, index=False)
 
         print(f"\nTop {model_name} features:")
@@ -153,14 +173,22 @@ class EnsembleLearningRunner:
         print(f"Feature importance saved: {csv_path}")
 
         plt.figure(figsize=(10, 6))
+
         top_features = feature_importance.head(top_n)
-        plt.barh(top_features['feature'][::-1], top_features['importance'][::-1])
+
+        plt.barh(
+            top_features["feature"][::-1],
+            top_features["importance"][::-1]
+        )
+
         plt.xlabel("Importance")
         plt.title(f"Top Features - {model_name}")
 
-        plot_path = os.path.join(self.output_dir, filename_plot)
-        plt.savefig(plot_path, bbox_inches='tight')
+        plot_path = os.path.join(self.output_dir_graphics, filename_plot)
+
+        plt.savefig(plot_path, bbox_inches="tight")
         plt.close()
+
         print(f"Feature importance plot saved: {plot_path}")
 
         return feature_importance
@@ -185,14 +213,20 @@ class EnsembleLearningRunner:
         )
 
         rf.fit(self.X_train, self.y_train)
+
         y_pred = rf.predict(self.X_test)
 
-        result = self._evaluate_regression("Random Forest Regressor (Bagging)", y_pred)
+        result = self._evaluate_regression(
+            "Random Forest Regressor (Bagging)",
+            y_pred
+        )
+
         self._plot_actual_vs_predicted(
             y_pred,
             "Random Forest Regressor",
             "random_forest_actual_vs_predicted.png"
         )
+
         self._plot_residuals(
             y_pred,
             "Random Forest Regressor",
@@ -209,6 +243,7 @@ class EnsembleLearningRunner:
 
         self.rf_model = rf
         self.rf_pred = y_pred
+
         return result
 
     # -------------------- GRADIENT BOOSTING: BOOSTING --------------------
@@ -232,14 +267,20 @@ class EnsembleLearningRunner:
         )
 
         gb.fit(self.X_train, self.y_train)
+
         y_pred = gb.predict(self.X_test)
 
-        result = self._evaluate_regression("Gradient Boosting Regressor (Boosting)", y_pred)
+        result = self._evaluate_regression(
+            "Gradient Boosting Regressor (Boosting)",
+            y_pred
+        )
+
         self._plot_actual_vs_predicted(
             y_pred,
             "Gradient Boosting Regressor",
             "gradient_boosting_actual_vs_predicted.png"
         )
+
         self._plot_residuals(
             y_pred,
             "Gradient Boosting Regressor",
@@ -256,14 +297,20 @@ class EnsembleLearningRunner:
 
         self.gb_model = gb
         self.gb_pred = y_pred
+
         return result
 
-    # -------------------- MODEL COMPARISON --------------------
+    # -------------------- SAVE RESULTS --------------------
     def save_results_table(self):
         """Save ensemble model comparison table."""
 
-        results_df = pd.DataFrame(self.results).sort_values(by='MAE')
-        save_path = os.path.join(self.output_dir, "ensemble_learning_results.csv")
+        results_df = pd.DataFrame(self.results).sort_values(by="MAE")
+
+        save_path = os.path.join(
+            self.output_dir_results,
+            "ensemble_learning_results.csv"
+        )
+
         results_df.to_csv(save_path, index=False)
 
         print("\n" + "=" * 20 + " ENSEMBLE MODEL COMPARISON " + "=" * 20)
@@ -279,9 +326,14 @@ class EnsembleLearningRunner:
         print("\n" + "=" * 20 + " ENSEMBLE LEARNING " + "=" * 20)
 
         self.prepare_data()
+
         self.run_random_forest()
         self.run_gradient_boosting()
+
         results_df = self.save_results_table()
 
-        print("Ensemble learning complete. Outputs saved to:", self.output_dir)
+        print("Ensemble learning complete.")
+        print("Metric outputs saved to:", self.output_dir_results)
+        print("Graphics saved to:", self.output_dir_graphics)
+
         return results_df

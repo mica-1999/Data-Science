@@ -1,4 +1,6 @@
 #%% Phase 3: Model Selection / Baseline Modeling
+
+import os
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -16,10 +18,14 @@ class ModelTester:
 
     def __init__(self, df: pd.DataFrame, config: dict):
         self.df = df.copy()
+        self.config = config
         self.target_col = config['modeling']['target_col']
         self.test_size = config['modeling']['test_size']
         self.random_state = config['modeling']['random_state']
         self.drop_cols = config['modeling']['drop_columns']
+
+        self.output_dir_results = config['output_dir_model_results']
+        os.makedirs(self.output_dir_results, exist_ok=True)
 
     # -------------------- PREPARING DATA --------------------
     def prepare_data(self):
@@ -67,12 +73,18 @@ class ModelTester:
             "R2": r2
         }
 
+        results_path = os.path.join(
+            self.output_dir_results,
+            "linear_regression_results.csv"
+        )
+        pd.DataFrame([self.lr_results]).to_csv(results_path, index=False)
+        print(f"Linear Regression results saved to: {results_path}")
+
         return self.lr_results
 
     # -------------------- RUN ALL --------------------
     def run_all_models(self):
         """Run baseline model."""
-
         print("\n" + "=" * 20 + " BASELINE MODELING " + "=" * 20)
 
         if not hasattr(self, "X_train"):

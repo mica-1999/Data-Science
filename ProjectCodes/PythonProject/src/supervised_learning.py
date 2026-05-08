@@ -1,5 +1,4 @@
-#%% Phase 4 - Supervised Learning Models (sklearn)
-# Decision Tree Regressor and Support Vector Regressor for ARR_DELAY prediction
+#%% Phase 4: Model Building / Supervised Learning Models
 
 import os
 import numpy as np
@@ -24,7 +23,7 @@ class SupervisedLearningRunner:
        - Easy to interpret, but can overfit if depth is not controlled.
 
     2. Support Vector Regressor (SVR)
-       - Learns a regression boundary/margin from labeled data.
+       - Learns a regression function with a margin/tolerance zone.
        - Uses scaled numeric features.
        - Can model non-linear patterns with an RBF kernel.
        - Expensive on large datasets, so a sample is used.
@@ -45,8 +44,11 @@ class SupervisedLearningRunner:
         self.test_size = modeling_cfg.get("test_size", 0.2)
         self.random_state = modeling_cfg.get("random_state", 42)
 
-        self.output_dir = config.get("output_dir_post_fe")
-        os.makedirs(self.output_dir, exist_ok=True)
+        self.output_dir_results = config["output_dir_model_results"]
+        self.output_dir_graphics = config["output_dir_model_graphics"]
+
+        os.makedirs(self.output_dir_results, exist_ok=True)
+        os.makedirs(self.output_dir_graphics, exist_ok=True)
 
         self.dt_max_depth = supervised_cfg.get("decision_tree", {}).get("max_depth", 10)
         self.dt_min_samples_leaf = supervised_cfg.get("decision_tree", {}).get("min_samples_leaf", 50)
@@ -63,12 +65,13 @@ class SupervisedLearningRunner:
         """
         Prepare X and y for sklearn models.
 
-        Important steps:
-        - Drop target/leakage columns listed in config.
-        - Keep only numeric columns, because sklearn regressors cannot directly use strings/categories.
-        - Fill remaining missing values with median.
-        - Split into train and test sets.
+        Steps:
+            - Drop target/leakage columns listed in config.
+            - Keep numeric columns only.
+            - Fill remaining missing values with median.
+            - Split into train and test sets.
         """
+
         df_model = self.df.copy()
 
         if sample_size is not None:
@@ -78,12 +81,9 @@ class SupervisedLearningRunner:
             )
 
         y = df_model[self.target_col]
+
         X = df_model.drop(columns=self.drop_cols, errors="ignore")
-
-        # Keep only numeric features. This avoids errors from categorical bins or text columns.
         X = X.select_dtypes(include=[np.number])
-
-        # Fill missing numeric values with median.
         X = X.fillna(X.median())
 
         X_train, X_test, y_train, y_test = train_test_split(
@@ -95,9 +95,10 @@ class SupervisedLearningRunner:
 
         return X_train, X_test, y_train, y_test
 
-    # -------------------- EVALUATION --------------------
-    def evaluate_regression(self, model_name, y_test, y_pred):
-        """Calculate and print standard regression metrics."""
+    # -------------------- EVALUATE REGRESSION --------------------
+    def evaluate_regression(self, model_name: str, y_test, y_pred):
+        """Calculate standard regression metrics."""
+
         mae = mean_absolute_error(y_test, y_pred)
         rmse = np.sqrt(mean_squared_error(y_test, y_pred))
         r2 = r2_score(y_test, y_pred)
@@ -107,46 +108,75 @@ class SupervisedLearningRunner:
         print(f"RMSE: {rmse:.3f}")
         print(f"R2  : {r2:.3f}")
 
-        self.results.append({
+        result = {
             "Model": model_name,
             "MAE": mae,
             "RMSE": rmse,
             "R2": r2
-        })
+        }
 
-        return mae, rmse, r2
+        self.results.append(result)
+        return result
 
-    # -------------------- PREDICTED VS ACTUAL PLOT --------------------
-    def plot_predictions(self, y_test, y_pred, model_name):
-        """Save a scatter plot comparing actual and predicted delays."""
+    # -------------------- PLOT ACTUAL VS PREDICTED --------------------
+    def plot_predictions(self, y_test, y_pred, model_name: str):
+        """Save scatter plot comparing actual and predicted delays."""
+
         plt.figure(figsize=(8, 6))
         plt.scatter(y_test, y_pred, alpha=0.3)
+
         plt.xlabel("Actual ARR_DELAY")
         plt.ylabel("Predicted ARR_DELAY")
         plt.title(f"{model_name}: Actual vs Predicted Arrival Delay")
 
-        # Reference line for perfect predictions
         min_val = min(y_test.min(), y_pred.min())
         max_val = max(y_test.max(), y_pred.max())
         plt.plot([min_val, max_val], [min_val, max_val], linestyle="--")
 
         filename = model_name.lower().replace(" ", "_").replace("(", "").replace(")", "")
-        path = os.path.join(self.output_dir, f"{filename}_actual_vs_predicted.png")
+        path = os.path.join(
+            self.output_dir_graphics,
+            f"{filename}_actual_vs_predicted.png"
+        )
+
         plt.savefig(path, bbox_inches="tight")
         plt.close()
-        print(f"Plot saved: {path}")
+
+        print(f"Actual vs predicted plot saved: {path}")
+
+    # -------------------- PLOT RESIDUALS --------------------
+    def plot_residuals(self, y_test, y_pred, model_name: str):
+        """Save residual distribution plot."""
+
+        residuals = y_test - y_pred
+
+        plt.figure(figsize=(8, 5))
+        plt.hist(residuals, bins=50)
+
+        plt.xlabel("Residual Error")
+        plt.ylabel("Frequency")
+        plt.title(f"{model_name}: Residual Distribution")
+
+        filename = model_name.lower().replace(" ", "_").replace("(", "").replace(")", "")
+        path = os.path.join(
+            self.output_dir_graphics,
+            f"{filename}_residuals.png"
+        )
+
+        plt.savefig(path, bbox_inches="tight")
+        plt.close()
+
+        print(f"Residual plot saved: {path}")
 
     # -------------------- DECISION TREE --------------------
     def run_decision_tree(self):
         """
         Run Decision Tree Regressor.
 
-        This model learns decision rules such as:
-        - if departure hour is late evening
-        - if distance is long
-        - if airline/route encoded feature has a certain value
-        then predict a certain arrival delay.
+        The model learns if/then style rules from the data and predicts ARR_DELAY
+        based on the average delay of samples that fall into each leaf.
         """
+
         print("\n" + "=" * 20 + " DECISION TREE REGRESSOR " + "=" * 20)
 
         X_train, X_test, y_train, y_test = self.prepare_data()
@@ -162,20 +192,24 @@ class SupervisedLearningRunner:
 
         self.evaluate_regression("Decision Tree Regressor", y_test, y_pred)
         self.plot_predictions(y_test, y_pred, "Decision Tree Regressor")
+        self.plot_residuals(y_test, y_pred, "Decision Tree Regressor")
 
-        # Feature importance table
         importance_df = pd.DataFrame({
             "feature": X_train.columns,
             "importance": dt.feature_importances_
         }).sort_values(by="importance", ascending=False)
 
-        importance_path = os.path.join(self.output_dir, "decision_tree_feature_importance.csv")
+        importance_path = os.path.join(
+            self.output_dir_results,
+            "decision_tree_feature_importance.csv"
+        )
+
         importance_df.to_csv(importance_path, index=False)
-        #print("Top Decision Tree features:")
-        # print(importance_df.head(10))
+
+        print("\nTop Decision Tree features:")
+        print(importance_df.head(10))
         print(f"Feature importance saved: {importance_path}")
 
-        # Save a small tree visualization. Full tree can be huge, so max_depth=3 only for plot.
         plt.figure(figsize=(24, 10))
         plot_tree(
             dt,
@@ -185,9 +219,15 @@ class SupervisedLearningRunner:
             max_depth=3,
             fontsize=8
         )
-        tree_path = os.path.join(self.output_dir, "decision_tree_preview.png")
+
+        tree_path = os.path.join(
+            self.output_dir_graphics,
+            "decision_tree_preview.png"
+        )
+
         plt.savefig(tree_path, bbox_inches="tight")
         plt.close()
+
         print(f"Decision tree preview saved: {tree_path}")
 
         self.dt_model = dt
@@ -201,10 +241,13 @@ class SupervisedLearningRunner:
         SVR is sensitive to feature scale, so StandardScaler is used inside a Pipeline.
         Since SVR can be slow on very large datasets, a sample is used.
         """
+
         print("\n" + "=" * 20 + " SUPPORT VECTOR REGRESSOR " + "=" * 20)
         print(f"Using sample size: {self.svr_sample_size}")
 
-        X_train, X_test, y_train, y_test = self.prepare_data(sample_size=self.svr_sample_size)
+        X_train, X_test, y_train, y_test = self.prepare_data(
+            sample_size=self.svr_sample_size
+        )
 
         svr = Pipeline(steps=[
             ("scaler", StandardScaler()),
@@ -220,14 +263,21 @@ class SupervisedLearningRunner:
 
         self.evaluate_regression("Support Vector Regressor", y_test, y_pred)
         self.plot_predictions(y_test, y_pred, "Support Vector Regressor")
+        self.plot_residuals(y_test, y_pred, "Support Vector Regressor")
 
         self.svr_model = svr
 
-    # -------------------- SAVE COMPARISON TABLE --------------------
+    # -------------------- SAVE RESULTS --------------------
     def save_results(self):
-        """Save all supervised learning model results in one comparison table."""
+        """Save supervised learning model results in one comparison table."""
+
         results_df = pd.DataFrame(self.results)
-        results_path = os.path.join(self.output_dir, "supervised_learning_results.csv")
+
+        results_path = os.path.join(
+            self.output_dir_results,
+            "supervised_learning_results.csv"
+        )
+
         results_df.to_csv(results_path, index=False)
 
         print("\n" + "=" * 20 + " SUPERVISED MODEL COMPARISON " + "=" * 20)
@@ -239,8 +289,16 @@ class SupervisedLearningRunner:
     # -------------------- RUN ALL --------------------
     def run_all(self):
         """Run both supervised sklearn models."""
+
+        print("\n" + "=" * 20 + " SUPERVISED LEARNING " + "=" * 20)
+
         self.run_decision_tree()
         self.run_svr()
+
         results_df = self.save_results()
-        print("Supervised learning complete. Outputs saved to:", self.output_dir)
+
+        print("Supervised learning complete.")
+        print("Metric outputs saved to:", self.output_dir_results)
+        print("Graphics saved to:", self.output_dir_graphics)
+
         return results_df

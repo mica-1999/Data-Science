@@ -1,3 +1,5 @@
+#%% Phase 3: Model Selection / Feature Engineering
+
 import pandas as pd
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 

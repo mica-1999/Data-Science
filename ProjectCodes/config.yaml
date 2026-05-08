@@ -1,6 +1,9 @@
 output_dir: "../../OutputFiles/Python/preFeatureEngineering"
 output_dir_r: "../../OutputFiles/R/preFeatureEngineering"
 output_dir_post_fe: "../../OutputFiles/Python/postFeatureEngineering"
+output_dir_model_results: "../../OutputFiles/Python/modelResults"
+output_dir_model_graphics: "../../OutputFiles/Python/modelGraphics"
+
 output_dir_knn: "../../OutputFiles/Python/kNNResults"
 output_dataset:
   cleaned: "../../ProjectDatasets/flights_cleaned.csv"
@@ -169,3 +172,20 @@ ensemble_learning:
     max_depth: 3
     min_samples_leaf: 30
     plot_top_features: 10
+
+deep_learning:
+  output_dir: "../../OutputFiles/Python/deepLearning"
+  sample_size: 200000
+  epochs: 50
+  batch_size: 512
+  validation_split: 0.2
+  patience: 5
+  learning_rate: 0.001
+
+clustering:
+  output_dir: "../../OutputFiles/Python/clustering"
+  sample_size: 100000
+  kmeans_clusters: 8
+  dbscan_eps: 0.8
+  dbscan_min_samples: 15
+  random_state: 42
