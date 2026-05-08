@@ -1,6 +1,7 @@
 output_dir: "../../OutputFiles/Python/preFeatureEngineering"
 output_dir_r: "../../OutputFiles/R/preFeatureEngineering"
 output_dir_post_fe: "../../OutputFiles/Python/postFeatureEngineering"
+output_dir_knn: "../../OutputFiles/Python/kNNResults"
 output_dataset:
   cleaned: "../../ProjectDatasets/flights_cleaned.csv"
   cleaned_scaled_new_features: "../../ProjectDatasets/flights_clean_scaled_featured.csv"
@@ -143,3 +144,28 @@ modeling:
     max_depth: 15
     plot_top_features: 15
     save_feature_importance_path: "../../OutputFiles/Python/postFeatureEngineering/top15features_for_pred.png"
+knn:
+  k_values: [13, 15, 17, 19, 21, 23, 25, 27, 29]
+  sample_size: 10000
+supervised_learning:
+  decision_tree:
+    max_depth: 10
+    min_samples_leaf: 50
+  svr:
+    sample_size: 20000
+    kernel: "rbf"
+    C: 10.0
+    epsilon: 1.0
+ensemble_learning:
+  random_forest:
+    n_estimators: 100
+    max_depth: 15
+    min_samples_leaf: 20
+    plot_top_features: 10
+
+  gradient_boosting:
+    n_estimators: 150
+    learning_rate: 0.05
+    max_depth: 3
+    min_samples_leaf: 30
+    plot_top_features: 10

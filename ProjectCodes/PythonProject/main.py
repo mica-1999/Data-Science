@@ -5,6 +5,9 @@ from ProjectCodes.PythonProject.src.pca_umap import DimensionalityReducer
 from ProjectCodes.PythonProject.src.hypothesis import HypothesisTester
 from ProjectCodes.PythonProject.src.feature_engineering import FeatureEngineer
 from ProjectCodes.PythonProject.src.model import ModelTester
+from ProjectCodes.PythonProject.src.kNN import KNNRunner
+from ProjectCodes.PythonProject.src.supervised_learning import SupervisedLearningRunner
+from ProjectCodes.PythonProject.src.ensemble_learning import EnsembleLearningRunner
 
 # Load config
 with open("../config.yaml", "r") as f:
@@ -21,7 +24,10 @@ def main():
         "4": "Run Hypothesis Testing",
         "5": "Run Feature Engineering",
         "6": "Run Post-Engineering EDA",
-        "7": "Run Modeling",
+        "7": "Run Modeling (Phase 1 - Linear Regression + Random Forest)",
+        "8": "Run kNN from Scratch (Phase 2)",
+        "9": "Run Supervised Learning Models (Decision Tree + SVR)",
+        "10": "Run Ensemble Learning (Random Forest + Gradient Boosting)",
         "0": "Exit"
     }
 
@@ -75,6 +81,24 @@ def main():
                 model_tester = ModelTester(df_final, config=config)
                 model_tester.prepare_data()
                 model_tester.run_all_models()
+        elif choice == "8":
+            if df_final is None:
+                print("⚠️ Please run Feature Engineering first! (Step 5)")
+            else:
+                knn_runner = KNNRunner(df_final, config=config)
+                knn_runner.run_all()
+        elif choice == "9":
+            if df_final is None:
+                print("⚠️ Please run Feature Engineering first! (Step 5)")
+            else:
+                supervised_runner = SupervisedLearningRunner(df_final, config=config)
+                supervised_runner.run_all()
+        elif choice == "10":
+            if df_final is None:
+                print("⚠️ Please run Feature Engineering first! (Step 5)")
+            else:
+                ensemble_runner = EnsembleLearningRunner(df_final, config=config)
+                ensemble_runner.run_all()
         else:
             print("Invalid choice. Please try again.")
 
