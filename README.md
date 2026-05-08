@@ -10,7 +10,6 @@ This project analyzes ~3 million commercial U.S. domestic flight records from 20
 Implemented in **Python and R**, with a modular class-based pipeline, config-driven architecture, and a Jupyter Notebook for reporting.
  
 ---
----
 
 ## 📄 Dataset
 - **Source:** Kaggle – [Flight Delay and Cancellation Dataset (2019–2023)](https://www.kaggle.com/datasets/patrickzel/flight-delay-and-cancellation-dataset-2019-2023/data)
