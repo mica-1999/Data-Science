@@ -47,8 +47,9 @@ project/
 ├── OutputFiles/
 │   ├── Python/
 │   │   ├── preFeatureEngineering/               # EDA, PCA, UMAP plots
-│   │   └── postFeatureEngineering/              # Feature importance plots
+│   │   ├── postFeatureEngineering/              # Feature importance plots
 │   │   ├── modelResults/                        # CSV evaluation tables
+│   │   ├── trainedModels/                      # Saved trained ML/DL models
 │   │   └── modelGraphics/                       # Model plots and visualizations
 │   └── R/
 │       ├── preFeatureEngineering/               # R EDA, PCA, UMAP plots
@@ -181,31 +182,31 @@ All pipeline parameters are controlled via `config.yaml`:
  
 | Model | Type | Notes |
 |-------|------|-------|
-| 🔢 **kNN (from scratch)** | Regression + Classification | Pure NumPy, Euclidean distance, configurable k |
-| 🌳 **Decision Tree** | Regression + Classification | Rule-based splits, feature importance included |
-| 📐 **SVR / SVC** | Regression + Classification | RBF kernel, sampled due to computational cost |
-| 🌲 **Random Forest** | Regression (Bagging) | Bootstrap aggregation, feature importance included |
-| 🚀 **Gradient Boosting** | Regression (Boosting) | Sequential error correction |
-| 🧠 **PyTorch MLP** | Regression | Fully connected, ReLU, Dropout, early stopping |
-| 🔵 **KMeans** | Clustering | Elbow + silhouette score evaluation |
-| 🌑 **DBSCAN** | Clustering | Density-based, anomaly detection |
+| 🔢 **kNN (from scratch)** | Regression + Classification | Pure NumPy implementation using Euclidean distance |
+| 🌳 **Decision Tree Regressor** | Regression | Rule-based regression with feature importance |
+| 📐 **Support Vector Regressor (SVR)** | Regression | RBF kernel with scaled features |
+| 🌲 **Random Forest Regressor** | Regression (Bagging) | Bootstrap aggregation ensemble |
+| 🚀 **Gradient Boosting Regressor** | Regression (Boosting) | Sequential boosting ensemble |
+| 🧠 **PyTorch MLP** | Regression | Feed-forward neural network with early stopping |
+| 🔵 **KMeans** | Clustering | Evaluated using elbow method and silhouette score |
+| 🌑 **DBSCAN** | Clustering | Density-based clustering and anomaly detection |
  
 **Phase 5 — Model Comparison**
  
 | Model | MAE | RMSE | R² |
 |-------|-----|------|----|
 | Linear Regression | 19.474 | 47.859 | 0.011 |
-| Random Forest | 19.239 | 47.945 | 0.007 |
-| kNN Regressor | TBD | TBD | TBD |
-| Decision Tree | TBD | TBD | TBD |
-| SVR | TBD | TBD | TBD |
-| Gradient Boosting | TBD | TBD | TBD |
-| PyTorch MLP | TBD | TBD | TBD |
+| Decision Tree Regressor | 19.276 | 47.772 | 0.014 |
+| Support Vector Regressor | 13.541 | 51.178 | -0.055 |
+| Random Forest Regressor | 19.169 | 47.636 | 0.020 |
+| Gradient Boosting Regressor | 19.298 | 47.716 | 0.017 |
+| PyTorch Feed-Forward Neural Network | 19.357 | 51.918 | 0.011 |
+| kNN Regressor (k=29) | 20.619 | 59.068 | -0.024 |
  
-**Phase 6 — Operationalize**
-- Final report produced in LaTeX (IEEE format)
-- Deployment plan documented
-- Presentation prepared
+**Phase 6 — Operationalization Planning**
+- Trained models saved for future reuse
+- Final report and presentation preparation planned
+- Project structured for reproducibility and future deployment  
 
 ---
 
