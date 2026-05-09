@@ -3,6 +3,7 @@
 import os
 import pandas as pd
 import numpy as np
+import joblib
 import matplotlib.pyplot as plt
 
 from sklearn.model_selection import train_test_split
@@ -35,9 +36,11 @@ class EnsembleLearningRunner:
 
         self.output_dir_results = config["output_dir_model_results"]
         self.output_dir_graphics = config["output_dir_model_graphics"]
+        self.output_dir_trained_models = config["output_dir_trained_models"]
 
         os.makedirs(self.output_dir_results, exist_ok=True)
         os.makedirs(self.output_dir_graphics, exist_ok=True)
+        os.makedirs(self.output_dir_trained_models, exist_ok=True)
 
         rf_cfg = config.get("ensemble_learning", {}).get(
             "random_forest",
@@ -244,6 +247,15 @@ class EnsembleLearningRunner:
         self.rf_model = rf
         self.rf_pred = y_pred
 
+        rf_model_path = os.path.join(
+            self.output_dir_trained_models,
+            "random_forest_model.pkl"
+        )
+
+        joblib.dump(rf, rf_model_path)
+
+        print(f"Random Forest model saved: {rf_model_path}")
+
         return result
 
     # -------------------- GRADIENT BOOSTING: BOOSTING --------------------
@@ -298,6 +310,15 @@ class EnsembleLearningRunner:
         self.gb_model = gb
         self.gb_pred = y_pred
 
+        gb_model_path = os.path.join(
+            self.output_dir_trained_models,
+            "gradient_boosting_model.pkl"
+        )
+
+        joblib.dump(gb, gb_model_path)
+
+        print(f"Gradient Boosting model saved: {gb_model_path}")
+
         return result
 
     # -------------------- SAVE RESULTS --------------------
@@ -335,5 +356,6 @@ class EnsembleLearningRunner:
         print("Ensemble learning complete.")
         print("Metric outputs saved to:", self.output_dir_results)
         print("Graphics saved to:", self.output_dir_graphics)
+        print("Trained models saved to:", self.output_dir_trained_models)
 
         return results_df

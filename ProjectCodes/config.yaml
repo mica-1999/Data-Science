@@ -1,20 +1,40 @@
+# ============================================================
+# OUTPUT DIRECTORIES
+# ============================================================
+
 output_dir: "../../OutputFiles/Python/preFeatureEngineering"
-output_dir_r: "../../OutputFiles/R/preFeatureEngineering"
 output_dir_post_fe: "../../OutputFiles/Python/postFeatureEngineering"
+
 output_dir_model_results: "../../OutputFiles/Python/modelResults"
 output_dir_model_graphics: "../../OutputFiles/Python/modelGraphics"
+output_dir_trained_models: "../../OutputFiles/Python/trainedModels"
 
-output_dir_knn: "../../OutputFiles/Python/kNNResults"
+output_dir_r: "../../OutputFiles/R/preFeatureEngineering"
+
+
+# ============================================================
+# DATASET PATHS
+# ============================================================
+
 output_dataset:
   cleaned: "../../ProjectDatasets/flights_cleaned.csv"
   cleaned_scaled_new_features: "../../ProjectDatasets/flights_clean_scaled_featured.csv"
+
   cleaned_r: "../../ProjectDatasets/flights_cleaned_r.csv"
   cleaned_scaled_new_features_r: "../../ProjectDatasets/flights_clean_scaled_featured_r.csv"
+
+
+# ============================================================
+# PREPROCESSING
+# ============================================================
+
 preprocessing:
   csv_path: "../../ProjectDatasets/flights_sample_3m.csv"
+
   distance_range:
-      min: 50
-      max: 5500
+    min: 50
+    max: 5500
+
   future_columns:
     - DEP_DELAY
     - DELAY_DUE_CARRIER
@@ -39,15 +59,27 @@ preprocessing:
     - ORIGIN_CITY
     - DEST_CITY
     - AIRLINE
+
   numeric_columns_for_outliers:
     - CRS_ELAPSED_TIME
+
   scaling_columns:
     - CRS_ELAPSED_TIME
     - DISTANCE
     - CRS_DEP_TIME
     - CRS_ARR_TIME
+
+
+# ============================================================
+# EXPLORATORY DATA ANALYSIS
+# ============================================================
+
 eda:
-  numeric_summary: [CRS_ELAPSED_TIME, DISTANCE, ARR_DELAY]
+  numeric_summary:
+    - CRS_ELAPSED_TIME
+    - DISTANCE
+    - ARR_DELAY
+
   numeric_hist:
     - CRS_ELAPSED_TIME
     - ELAPSED_TIME
@@ -61,6 +93,7 @@ eda:
     - DELAY_DUE_WEATHER
     - DELAY_DUE_NAS
     - DELAY_DUE_LATE_AIRCRAFT
+
   scatter_plots:
     - [DISTANCE, ARR_DELAY, "Distance vs Arrival Delay", "scatter_distance_arrdelay.png"]
     - [CRS_ELAPSED_TIME, ARR_DELAY, "Scheduled Duration vs Arrival Delay", "scatter_crs_arrdelay.png"]
@@ -73,39 +106,69 @@ eda:
     - [DELAY_DUE_WEATHER, ARR_DELAY, "Weather Delay vs Arrival Delay", "scatter_weatherdelay_arrdelay.png"]
     - [DELAY_DUE_NAS, ARR_DELAY, "NAS Delay vs Arrival Delay", "scatter_nasdelay_arrdelay.png"]
     - [DELAY_DUE_LATE_AIRCRAFT, ARR_DELAY, "Late Aircraft Delay vs Arrival Delay", "scatter_lateaircraft_arrdelay.png"]
+
+
+# ============================================================
+# DIMENSIONALITY REDUCTION
+# ============================================================
+
 dim_reduction:
   features_for_dr:
     - CRS_ELAPSED_TIME_std
     - DISTANCE_std
     - CRS_DEP_TIME_std
     - CRS_ARR_TIME_std
+
   n_components: 2
   umap_sample_size: 200000
   umap_n_neighbors: 50
   umap_min_dist: 0.1
   umap_alpha: 0.5
+
+
+# ============================================================
+# HYPOTHESIS TESTING
+# ============================================================
+
 hypothesis:
   ttest_airlines:
     - "Southwest Airlines Co."
     - "Delta Air Lines Inc."
+
   weather_col: "DELAY_DUE_WEATHER"
+
+
+# ============================================================
+# FEATURE ENGINEERING
+# ============================================================
+
 feature_engineering:
   categorical:
     onehot:
       - AIRLINE_CODE
+
     label:
       - ORIGIN
       - DEST
+
   binning:
     dep_hour:
       bins: [0, 6, 12, 18, 24]
-      labels: ['Early Morning', 'Morning', 'Afternoon', 'Evening/Night']
+      labels: ["Early Morning", "Morning", "Afternoon", "Evening/Night"]
+
     elapsed_time:
       bins: [0, 60, 120, 240, 1000]
-      labels: ['Short', 'Medium-Short', 'Medium-Long', 'Long']
+      labels: ["Short", "Medium-Short", "Medium-Long", "Long"]
+
     distance:
       bins: [0, 500, 1000, 2000, 5500]
-      labels: ['Short', 'Medium-Short', 'Medium-Long', 'Long']
+      labels: ["Short", "Medium-Short", "Medium-Long", "Long"]
+
+
+# ============================================================
+# POST-FEATURE ENGINEERING EDA
+# ============================================================
+
 eda_post_engineering:
   numeric_hist:
     - DAY_OF_WEEK
@@ -115,6 +178,7 @@ eda_post_engineering:
     - DEP_HOUR
     - elapsed_x_distance
     - dep_hour_x_elapsed
+
   correlation_cols:
     - DAY_OF_WEEK
     - MONTH
@@ -124,13 +188,21 @@ eda_post_engineering:
     - elapsed_x_distance
     - dep_hour_x_elapsed
     - ARR_DELAY
+
   boxplot:
     - IS_WEEKEND
     - IS_RUSH_HOUR
+
+
+# ============================================================
+# SHARED MODELING SETTINGS
+# ============================================================
+
 modeling:
   target_col: ARR_DELAY
   test_size: 0.2
   random_state: 42
+
   drop_columns:
     - ARR_DELAY
     - CRS_DEP_TIME
@@ -141,24 +213,44 @@ modeling:
     - DISTANCE_minmax
     - CRS_ELAPSED_TIME_std
     - DISTANCE_std
-  linear_regression: {}
-  random_forest:
-    n_estimators: 200
-    max_depth: 15
-    plot_top_features: 15
-    save_feature_importance_path: "../../OutputFiles/Python/postFeatureEngineering/top15features_for_pred.png"
+
+
+# ============================================================
+# BASELINE MODELING
+# ============================================================
+
+linear_regression: {}
+
+
+# ============================================================
+# kNN FROM SCRATCH
+# ============================================================
+
 knn:
   k_values: [13, 15, 17, 19, 21, 23, 25, 27, 29]
   sample_size: 10000
+
+
+# ============================================================
+# SUPERVISED LEARNING
+# ============================================================
+
 supervised_learning:
   decision_tree:
     max_depth: 10
     min_samples_leaf: 50
+
   svr:
     sample_size: 20000
     kernel: "rbf"
     C: 10.0
     epsilon: 1.0
+
+
+# ============================================================
+# ENSEMBLE LEARNING
+# ============================================================
+
 ensemble_learning:
   random_forest:
     n_estimators: 100
@@ -173,17 +265,24 @@ ensemble_learning:
     min_samples_leaf: 30
     plot_top_features: 10
 
+
+# ============================================================
+# DEEP LEARNING
+# ============================================================
+
 deep_learning:
-  output_dir: "../../OutputFiles/Python/deepLearning"
   sample_size: 200000
   epochs: 50
   batch_size: 512
-  validation_split: 0.2
   patience: 5
   learning_rate: 0.001
 
+
+# ============================================================
+# CLUSTERING
+# ============================================================
+
 clustering:
-  output_dir: "../../OutputFiles/Python/clustering"
   sample_size: 100000
   kmeans_clusters: 8
   dbscan_eps: 0.8

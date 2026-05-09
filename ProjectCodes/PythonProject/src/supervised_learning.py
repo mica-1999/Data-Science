@@ -3,6 +3,7 @@
 import os
 import numpy as np
 import pandas as pd
+import joblib
 import matplotlib.pyplot as plt
 
 from sklearn.model_selection import train_test_split
@@ -46,9 +47,11 @@ class SupervisedLearningRunner:
 
         self.output_dir_results = config["output_dir_model_results"]
         self.output_dir_graphics = config["output_dir_model_graphics"]
+        self.output_dir_trained_models = config["output_dir_trained_models"]
 
         os.makedirs(self.output_dir_results, exist_ok=True)
         os.makedirs(self.output_dir_graphics, exist_ok=True)
+        os.makedirs(self.output_dir_trained_models, exist_ok=True)
 
         self.dt_max_depth = supervised_cfg.get("decision_tree", {}).get("max_depth", 10)
         self.dt_min_samples_leaf = supervised_cfg.get("decision_tree", {}).get("min_samples_leaf", 50)
@@ -233,6 +236,15 @@ class SupervisedLearningRunner:
         self.dt_model = dt
         self.dt_feature_importance = importance_df
 
+        dt_model_path = os.path.join(
+            self.output_dir_trained_models,
+            "decision_tree_model.pkl"
+        )
+
+        joblib.dump(dt, dt_model_path)
+
+        print(f"Decision Tree model saved: {dt_model_path}")
+
     # -------------------- SVR --------------------
     def run_svr(self):
         """
@@ -267,6 +279,15 @@ class SupervisedLearningRunner:
 
         self.svr_model = svr
 
+        svr_model_path = os.path.join(
+            self.output_dir_trained_models,
+            "svr_model.pkl"
+        )
+
+        joblib.dump(svr, svr_model_path)
+
+        print(f"SVR model saved: {svr_model_path}")
+
     # -------------------- SAVE RESULTS --------------------
     def save_results(self):
         """Save supervised learning model results in one comparison table."""
@@ -300,5 +321,6 @@ class SupervisedLearningRunner:
         print("Supervised learning complete.")
         print("Metric outputs saved to:", self.output_dir_results)
         print("Graphics saved to:", self.output_dir_graphics)
+        print("Trained models saved to:", self.output_dir_trained_models)
 
         return results_df

@@ -17,12 +17,6 @@ from torch.utils.data import TensorDataset, DataLoader
 class FlightDelayMLP(nn.Module):
     """
     Feed-forward neural network for flight delay regression.
-
-    Architecture:
-        Input layer  -> flight features
-        Hidden layer -> Dense/ReLU
-        Hidden layer -> Dense/ReLU
-        Output layer -> one value: predicted ARR_DELAY
     """
 
     def __init__(self, input_dim: int):
@@ -74,9 +68,11 @@ class DeepLearningRunner:
 
         self.output_dir_results = config["output_dir_model_results"]
         self.output_dir_graphics = config["output_dir_model_graphics"]
+        self.output_dir_trained_models = config["output_dir_trained_models"]
 
         os.makedirs(self.output_dir_results, exist_ok=True)
         os.makedirs(self.output_dir_graphics, exist_ok=True)
+        os.makedirs(self.output_dir_trained_models, exist_ok=True)
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -316,7 +312,7 @@ class DeepLearningRunner:
         print(f"Results table saved: {results_path}")
 
         model_path = os.path.join(
-            self.output_dir_results,
+            self.output_dir_trained_models,
             "deep_learning_model.pt"
         )
 
@@ -343,5 +339,6 @@ class DeepLearningRunner:
         print("Deep learning complete.")
         print("Metric outputs saved to:", self.output_dir_results)
         print("Graphics saved to:", self.output_dir_graphics)
+        print("Trained model saved to:", self.output_dir_trained_models)
 
         return self.results
