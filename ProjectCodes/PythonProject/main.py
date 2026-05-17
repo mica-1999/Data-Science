@@ -113,7 +113,10 @@ def main():
             if df_final is None:
                 print("⚠️ Please run Feature Engineering first! (Step 5)")
             else:
-                clustering_runner = ClusteringRunner(df_final, config=config)
+                df_clustering = df_final.copy()
+                df_clustering["AIRLINE_CODE"] = preprocessor.df_cleaned["AIRLINE_CODE"].values
+
+                clustering_runner = ClusteringRunner(df_clustering, config=config)
                 clustering_runner.run_all()
         else:
             print("Invalid choice. Please try again.")

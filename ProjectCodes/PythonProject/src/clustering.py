@@ -311,6 +311,57 @@ class ClusteringRunner:
             filename="dbscan_clusters_pca.png"
         )
 
+    def prepare_airline_profiles(self):
+        profiles = self.df.groupby("AIRLINE_CODE").agg(
+            avg_delay=("ARR_DELAY", "mean"),
+            delay_std=("ARR_DELAY", "std"),
+            avg_distance=("DISTANCE", "mean"),
+            on_time_rate=("ARR_DELAY", lambda x: (x < 15).mean()),
+            long_delay_rate=("ARR_DELAY", lambda x: (x > 30).mean()),
+            avg_dep_hour=("DEP_HOUR", "mean"),
+        ).dropna().reset_index()
+
+        self.airline_names = profiles["AIRLINE_CODE"].values
+
+        scaler = StandardScaler()
+        self.X_airline = scaler.fit_transform(
+            profiles.drop(columns=["AIRLINE_CODE"])
+        )
+
+        print(f"Airline profiles shape: {self.X_airline.shape}")
+        return self.X_airline
+
+    def run_airline_clustering(self):
+        print("\n" + "=" * 20 + " AIRLINE CLUSTERING " + "=" * 20)
+
+        self.prepare_airline_profiles()
+
+        best_k, best_score = 2, -1
+
+        for k in range(2, min(6, len(self.airline_names))):
+            km = KMeans(n_clusters=k, random_state=self.random_state, n_init=10)
+            labels = km.fit_predict(self.X_airline)
+            score = silhouette_score(self.X_airline, labels)
+
+            print(f"k={k} | Silhouette: {score:.4f}")
+
+            if score > best_score:
+                best_score, best_k = score, k
+
+        km_final = KMeans(n_clusters=best_k, random_state=self.random_state, n_init=10)
+        labels = km_final.fit_predict(self.X_airline)
+
+        results = pd.DataFrame({
+            "AIRLINE_CODE": self.airline_names,
+            "Cluster": labels
+        })
+
+        path = os.path.join(self.output_dir_results, "airline_clustering_results.csv")
+        results.to_csv(path, index=False)
+
+        print(results.sort_values("Cluster"))
+        print(f"Airline clustering results saved: {path}")
+
     # -------------------- PCA CLUSTER PLOT --------------------
     def _plot_pca_clusters(self, labels, title: str, filename: str):
         """Use PCA to visualize clustering labels in two dimensions."""
@@ -350,6 +401,7 @@ class ClusteringRunner:
 
         self.run_kmeans()
         self.run_dbscan()
+        self.run_airline_clustering()
 
         print("Clustering complete.")
         print("Metric outputs saved to:", self.output_dir_results)
