@@ -15,6 +15,7 @@ from sklearn.metrics import (
     classification_report,
     confusion_matrix
 )
+from sklearn.utils import resample
 
 class KNNFromScratch:
     """
@@ -126,12 +127,34 @@ class KNNRunner:
 
         if mode == "regression":
             y = df_sample[self.target_col].values
+            X_np = X.values.astype(np.float64)
+            y_np = y.astype(np.float64)
+
         else:
             delay = df_sample[self.target_col]
             y = np.where(delay < 15, 0, np.where(delay <= 30, 1, 2))
 
-        X_np = X.values.astype(np.float64)
-        y_np = y.astype(np.float64)
+            # Balance classes by undersampling majority class
+            df_temp = X.copy()
+            df_temp["__target__"] = y
+
+            on_time = df_temp[df_temp["__target__"] == 0]
+            short = df_temp[df_temp["__target__"] == 1]
+            long_ = df_temp[df_temp["__target__"] == 2]
+
+            min_size = min(len(on_time), len(short), len(long_))
+
+            on_time_bal = resample(on_time, n_samples=min_size, random_state=self.random_state)
+            short_bal = resample(short, n_samples=min_size, random_state=self.random_state)
+            long_bal = resample(long_, n_samples=min_size, random_state=self.random_state)
+
+            df_balanced = pd.concat([on_time_bal, short_bal, long_bal])
+            df_balanced = df_balanced.sample(frac=1, random_state=self.random_state)
+
+            X_np = df_balanced.drop(columns=["__target__"]).values.astype(np.float64)
+            y_np = df_balanced["__target__"].values.astype(np.float64)
+
+            print(f"Balanced class sizes: {min_size} per class | Total: {len(y_np)}")
 
         X_train, X_test, y_train, y_test = train_test_split(
             X_np,
