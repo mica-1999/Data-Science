@@ -93,7 +93,8 @@ class KNNRunner:
         self.random_state = config["modeling"]["random_state"]
         self.drop_cols = config["modeling"]["drop_columns"]
 
-        self.k_values = config["knn"]["k_values"]
+        self.k_values_regression = config["knn"]["k_values_regression"]
+        self.k_values_classification = config["knn"]["k_values_classification"]
         self.sample_size = config["knn"]["sample_size"]
 
         self.output_dir_results = config["output_dir_model_results"]
@@ -283,7 +284,7 @@ class KNNRunner:
         """Run kNN regression for every k."""
 
         print("\n" + "=" * 20 + " kNN REGRESSION " + "=" * 20)
-        print(f"Sample size: {self.sample_size} | k values: {self.k_values}")
+        print(f"Sample size: {self.sample_size} | k values: {self.k_values_regression}")
 
         X_train, X_test, y_train, y_test = self._prepare_data(mode="regression")
 
@@ -292,7 +293,7 @@ class KNNRunner:
         regression_results = []
         mae_list = []
 
-        for k in self.k_values:
+        for k in self.k_values_regression:
             print(f"\nFitting kNN Regressor with k={k}...")
 
             knn = KNNFromScratch(k=k, mode="regression")
@@ -305,7 +306,7 @@ class KNNRunner:
             regression_results.append(result)
             mae_list.append(result["MAE"])
 
-        self._plot_k_vs_metric(self.k_values, mae_list, "MAE", "regression")
+        self._plot_k_vs_metric(self.k_values_regression, mae_list, "MAE", "regression")
 
         best_result = min(regression_results, key=lambda x: x["MAE"])
         print(f"\nBest k for regression: k={best_result['k']}")
@@ -322,7 +323,7 @@ class KNNRunner:
         """Run kNN classification for every k."""
 
         print("\n" + "=" * 20 + " kNN CLASSIFICATION " + "=" * 20)
-        print(f"Sample size: {self.sample_size} | k values: {self.k_values}")
+        print(f"Sample size: {self.sample_size} | k values: {self.k_values_classification}")
 
         X_train, X_test, y_train, y_test = self._prepare_data(mode="classification")
 
@@ -336,7 +337,7 @@ class KNNRunner:
         best_pred = None
         best_report = None
 
-        for k in self.k_values:
+        for k in self.k_values_classification:
             print(f"\nFitting kNN Classifier with k={k}...")
 
             knn = KNNFromScratch(k=k, mode="classification")
@@ -355,13 +356,7 @@ class KNNRunner:
                 best_pred = y_pred
                 best_report = report_dict
 
-        self._plot_k_vs_metric(
-            self.k_values,
-            accuracy_list,
-            "Accuracy",
-            "classification"
-        )
-
+        self._plot_k_vs_metric(self.k_values_classification, accuracy_list, "Accuracy", "classification")
         self._plot_confusion_matrix(y_test, best_pred, best_k)
 
         print(f"\nBest k for classification: k={best_k}")

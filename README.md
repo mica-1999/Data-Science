@@ -5,7 +5,7 @@ This project analyzes ~3 million commercial U.S. domestic flight records from 20
  
 - **Predict** arrival delay duration in minutes (regression)
 - **Classify** flights as on-time, short delay, or long delay (classification)
-- **Cluster** flights to identify operational patterns across airlines and airports
+- **Cluster** operational airline profiles to identify patterns in punctuality, delay behavior, and route characteristics
 - **Test** statistical hypotheses about factors driving flight delays
 Implemented in **Python and R**, with a modular class-based pipeline, config-driven architecture, and a Jupyter Notebook for reporting.
  
@@ -182,7 +182,7 @@ All pipeline parameters are controlled via `config.yaml`:
  
 | Model | Type | Notes |
 |-------|------|-------|
-| 🔢 **kNN (from scratch)** | Regression + Classification | Pure NumPy implementation using Euclidean distance |
+| 🔢 **kNN (from scratch)** | Regression + Classification | Pure NumPy implementation using Euclidean distance with separate k ranges for regression and classification |
 | 🌳 **Decision Tree Regressor** | Regression | Rule-based regression with feature importance |
 | 📐 **Support Vector Regressor (SVR)** | Regression | RBF kernel with scaled features |
 | 🌲 **Random Forest Regressor** | Regression (Bagging) | Bootstrap aggregation ensemble |
@@ -190,7 +190,7 @@ All pipeline parameters are controlled via `config.yaml`:
 | 🧠 **PyTorch MLP** | Regression | Feed-forward neural network with early stopping |
 | 🔵 **KMeans** | Clustering | Evaluated using elbow method and silhouette score |
 | 🌑 **DBSCAN** | Clustering | Density-based clustering and anomaly detection |
- 
+| ✈️ **Airline Clustering** | Clustering | Airline-level operational profile clustering using aggregated delay statistics |
 **Phase 5 — Model Comparison**
  
 | Model | MAE | RMSE | R² |
@@ -201,7 +201,7 @@ All pipeline parameters are controlled via `config.yaml`:
 | Random Forest Regressor | 19.169 | 47.636 | 0.020 |
 | Gradient Boosting Regressor | 19.298 | 47.716 | 0.017 |
 | PyTorch Feed-Forward Neural Network | 19.357 | 51.918 | 0.011 |
-| kNN Regressor (k=29) | 20.619 | 59.068 | -0.024 |
+| kNN Regressor (k=29) | 20.156 | 45.816 | -0.031 |
  
 **Phase 6 — Operationalization Planning**
 - Trained models saved for future reuse
@@ -215,7 +215,8 @@ All pipeline parameters are controlled via `config.yaml`:
 - Flight delay prediction is highly noisy when restricted to pre-departure information only
 - Strict leakage prevention significantly reduced artificially inflated model performance
 - Ensemble methods slightly outperformed simpler baseline models
-- kNN struggled with class imbalance — majority of flights are on-time
+- kNN classification achieved moderate performance, with smaller neighborhood sizes performing better for preserving local class structure
+- Different k ranges were more suitable for regression and classification tasks
 - Deep learning did not substantially outperform traditional ML approaches
 - Clustering revealed only weak natural operational separation between flights
 - Most models converged to similar MAE values around **19–21 minutes**
